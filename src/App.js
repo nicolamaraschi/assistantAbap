@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { FiSettings, FiStar, FiCode, FiClock } from 'react-icons/fi';
+import { FiSettings, FiStar, FiCode, FiClock, FiList, FiHelpCircle } from 'react-icons/fi';
 
 // Componenti di layout
 import Header from './components/layout/Header';
@@ -10,6 +10,8 @@ import SelectContainer from './components/layout/SelectContainer';
 import Select from './components/common/Select';
 import Button from './components/common/Button';
 import Tabs from './components/common/Tabs';
+import ToastManager from './components/common/ToastManager';
+import Breadcrumbs from './components/navigation/Breadcrumbs';
 
 // Componenti dei form
 import IfElseForm from './components/forms/IfElseForm';
@@ -17,16 +19,28 @@ import CaseForm from './components/forms/CaseForm';
 import LoopAtForm from './components/forms/LoopAtForm';
 import SelectForm from './components/forms/SelectForm';
 import GenericForm from './components/forms/GenericForm';
+import DoEndDoForm from './components/forms/DoEndDoForm';
+import WhileForm from './components/forms/WhileForm';
+import UpdateForm from './components/forms/UpdateForm';
+import InsertForm from './components/forms/InsertForm';
+import ModifyForm from './components/forms/ModifyForm';
+import DeleteForm from './components/forms/DeleteForm';
+import FormForm from './components/forms/FormForm';
 
 // Componenti di anteprima
 import CodePreview from './components/preview/CodePreview';
 
-// Componenti template
+// Componenti template e aiuto
 import TemplatesPanel from './components/templates/TemplatesPanel';
+import SearchBar from './components/search/SearchBar';
+import GenerationHistory from './components/history/GenerationHistory';
+import Documentation from './components/help/Documentation';
 
 // Context e utility
 import { AbapProvider, useAbap } from './context/AbapContext';
 import useCodeGenerator from './hooks/useCodeGenerator';
+import useToast from './hooks/useToast';
+import useGenerationHistory from './hooks/useGenerationHistory';
 import constructTypes, { getConstructNameById } from './data/constructTypes';
 
 // Componente principale dell'applicazione
@@ -45,11 +59,24 @@ const AppContent = () => {
     activeTab, 
     setActiveTab,
     updateFormState,
-    savedTemplates
+    savedTemplates,
+    saveTemplate,
+    deleteTemplate
   } = useAbap();
   
   // Utilizzo del generatore di codice
   const { generateCode } = useCodeGenerator();
+  
+  // Utilizzo del sistema di notifiche toast
+  const { toasts, removeToast, showSuccess, showError, showInfo } = useToast();
+  
+  // Utilizzo della cronologia delle generazioni
+  const { 
+    history, 
+    addToHistory, 
+    clearHistory,
+    searchHistory
+  } = useGenerationHistory();
   
   // Costruzione delle opzioni del dropdown per i tipi di costrutti
   const constructOptions = constructTypes.map(group => ({
@@ -62,6 +89,8 @@ const AppContent = () => {
     { id: 'standard', label: 'Standard', icon: <FiCode /> },
     { id: 'favorites', label: 'Preferiti', icon: <FiStar /> },
     { id: 'templates', label: 'Template', icon: <FiClock /> },
+    { id: 'history', label: 'Cronologia', icon: <FiList /> },
+    { id: 'help', label: 'Aiuto', icon: <FiHelpCircle /> },
     { id: 'settings', label: 'Impostazioni', icon: <FiSettings /> }
   ];
   
@@ -72,12 +101,60 @@ const AppContent = () => {
   
   // Gestione della generazione del codice
   const handleGenerateCode = (constructType, formData) => {
-    const code = generateCode(constructType, formData, {
-      autoFormat: settings.autoFormat
-    });
+    try {
+      const code = generateCode(constructType, formData, {
+        autoFormat: settings.autoFormat
+      });
+      
+      if (code) {
+        setGeneratedCode(code);
+        
+        // Aggiungi alla cronologia
+        addToHistory({
+          constructType,
+          description: getConstructNameById(constructType),
+          generatedCode: code,
+          formData
+        });
+        
+        showSuccess('Codice generato con successo!');
+      }
+    } catch (error) {
+      showError(`Errore nella generazione del codice: ${error.message}`);
+    }
+  };
+  
+  // Funzione per la gestione della cronologia
+  const handleSelectFromHistory = (historyItem) => {
+    setSelectedConstructType(historyItem.constructType);
+    setGeneratedCode(historyItem.generatedCode);
     
-    if (code) {
-      setGeneratedCode(code);
+    // Se ci sono dati del form, caricali
+    if (historyItem.formData) {
+      updateFormState(historyItem.constructType, historyItem.formData);
+    }
+    
+    // Torna alla tab standard
+    setActiveTab('standard');
+  };
+  
+  // Funzione helper per ottenere il gruppo di un costrutto
+  const getConstructGroupById = (id) => {
+    for (const group of constructTypes) {
+      if (group.items.some(item => item.id === id)) {
+        return group.group;
+      }
+    }
+    return 'Altro';
+  };
+  
+  // Gestione del salvataggio template
+  const handleSaveTemplate = (name, formData) => {
+    try {
+      saveTemplate(name, selectedConstructType, formData, generatedCode);
+      showSuccess(`Template "${name}" salvato con successo!`);
+    } catch (error) {
+      showError(`Errore nel salvataggio del template: ${error.message}`);
     }
   };
   
@@ -92,6 +169,20 @@ const AppContent = () => {
         return <LoopAtForm onGenerate={handleGenerateCode} />;
       case 'select':
         return <SelectForm onGenerate={handleGenerateCode} />;
+      case 'do-enddo':
+        return <DoEndDoForm onGenerate={handleGenerateCode} />;
+      case 'while':
+        return <WhileForm onGenerate={handleGenerateCode} />;
+      case 'update':
+        return <UpdateForm onGenerate={handleGenerateCode} />;
+      case 'insert':
+        return <InsertForm onGenerate={handleGenerateCode} />;
+      case 'modify':
+        return <ModifyForm onGenerate={handleGenerateCode} />;
+      case 'delete':
+        return <DeleteForm onGenerate={handleGenerateCode} />;
+      case 'form':
+        return <FormForm onGenerate={handleGenerateCode} />;
       default:
         return <GenericForm constructType={selectedConstructType} onGenerate={handleGenerateCode} />;
     }
@@ -126,10 +217,29 @@ const AppContent = () => {
                 setSelectedConstructType(template.constructType);
                 // Qui dovremmo anche caricare i dati del form specifico
                 updateFormState(template.constructType, template.formData);
+                setGeneratedCode(template.generatedCode || '');
+                setActiveTab('standard');
               }}
             />
           </div>
         );
+      case 'history':
+        return (
+          <div>
+            <h3>Cronologia generazioni</h3>
+            <GenerationHistory
+              history={history}
+              onSelect={handleSelectFromHistory}
+              onClear={clearHistory}
+              onCopy={(item) => {
+                navigator.clipboard.writeText(item.generatedCode);
+                showSuccess('Codice copiato negli appunti!');
+              }}
+            />
+          </div>
+        );
+      case 'help':
+        return <Documentation />;
       case 'settings':
         return (
           <SettingsPanel>
@@ -195,8 +305,10 @@ const AppContent = () => {
                     if (selectedConstruct) {
                       if (favorites.some(fav => fav.id === selectedConstruct.id)) {
                         removeFromFavorites(selectedConstruct.id);
+                        showInfo('Rimosso dai preferiti');
                       } else {
                         addToFavorites(selectedConstruct);
+                        showSuccess('Aggiunto ai preferiti');
                       }
                     }
                   }}
@@ -205,6 +317,15 @@ const AppContent = () => {
                 </FavoriteButton>
               </div>
             </SelectContainer>
+            
+            <Breadcrumbs 
+              items={[
+                { label: 'Home' },
+                { label: getConstructGroupById(selectedConstructType) },
+                { label: getConstructNameById(selectedConstructType) }
+              ]}
+            />
+            
             <h3>{getConstructNameById(selectedConstructType)}</h3>
             {renderForm()}
           </div>
@@ -227,9 +348,14 @@ const AppContent = () => {
         </OptionsPanel>
         
         <OutputPanel>
-          <CodePreview code={generatedCode} />
+          <CodePreview 
+            code={generatedCode} 
+            onSaveTemplate={handleSaveTemplate} 
+          />
         </OutputPanel>
       </MainContent>
+      
+      <ToastManager toasts={toasts} onClose={removeToast} />
     </AppContainer>
   );
 };

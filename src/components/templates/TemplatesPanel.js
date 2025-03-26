@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FiTrash2, FiEdit, FiCopy } from 'react-icons/fi';
+import { FiTrash2, FiEdit, FiCopy, FiEye } from 'react-icons/fi';
 import Button from '../common/Button';
+import SearchBar from '../search/SearchBar';
 import { useAbap } from '../../context/AbapContext';
 
 // Componente per visualizzare e gestire i template salvati
 const TemplatesPanel = ({ onSelectTemplate }) => {
-  const { savedTemplates, setGeneratedCode } = useAbap();
+  const { savedTemplates, setGeneratedCode, deleteTemplate } = useAbap();
   const [searchTerm, setSearchTerm] = useState('');
   
   // Filtra i template per la ricerca
@@ -29,6 +30,13 @@ const TemplatesPanel = ({ onSelectTemplate }) => {
     }
   };
   
+  // Gestisce l'eliminazione di un template
+  const handleDeleteTemplate = (id) => {
+    if (window.confirm('Sei sicuro di voler eliminare questo template?')) {
+      deleteTemplate(id);
+    }
+  };
+  
   // Formatta la data di creazione del template
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -43,14 +51,10 @@ const TemplatesPanel = ({ onSelectTemplate }) => {
   
   return (
     <Container>
-      <SearchBar>
-        <input
-          type="text"
-          placeholder="Cerca template..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </SearchBar>
+      <SearchBar
+        onSearch={setSearchTerm}
+        placeholder="Cerca template..."
+      />
       
       {filteredTemplates.length === 0 ? (
         <EmptyState>
@@ -75,14 +79,16 @@ const TemplatesPanel = ({ onSelectTemplate }) => {
                   size="small"
                   icon={<FiCopy />}
                   onClick={() => handleSelectTemplate(template)}
+                  title="Usa questo template"
                 >
                   Usa
                 </Button>
                 <Button
                   variant="text"
                   size="small"
-                  icon={<FiEdit />}
+                  icon={<FiEye />}
                   onClick={() => handlePreviewTemplate(template)}
+                  title="Anteprima del codice"
                 >
                   Anteprima
                 </Button>
@@ -90,7 +96,8 @@ const TemplatesPanel = ({ onSelectTemplate }) => {
                   variant="text"
                   size="small"
                   icon={<FiTrash2 />}
-                  onClick={() => console.log('Rimuovi template', template.id)}
+                  onClick={() => handleDeleteTemplate(template.id)}
+                  title="Elimina questo template"
                 >
                   Rimuovi
                 </Button>
@@ -108,18 +115,6 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-`;
-
-const SearchBar = styled.div`
-  margin-bottom: 15px;
-  
-  input {
-    width: 100%;
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 15px;
-  }
 `;
 
 const EmptyState = styled.div`
@@ -142,6 +137,7 @@ const TemplatesList = styled.div`
   flex-direction: column;
   gap: 12px;
   overflow-y: auto;
+  margin-top: 15px;
 `;
 
 const TemplateItem = styled.div`
@@ -191,4 +187,4 @@ const TemplateActions = styled.div`
   margin-top: 10px;
 `;
 
-export default TemplatesPanel;
+export default TemplatesPane
