@@ -1,0 +1,121 @@
+import React from 'react';
+import styled from 'styled-components';
+import { FiSettings, FiStar, FiCode, FiClock } from 'react-icons/fi';
+
+// Componenti di layout
+import Header from './components/layout/Header';
+import SelectContainer from './components/layout/SelectContainer';
+
+// Componenti comuni
+import Select from './components/common/Select';
+import Button from './components/common/Button';
+import Tabs from './components/common/Tabs';
+
+// Componenti dei form
+import IfElseForm from './components/forms/IfElseForm';
+import CaseForm from './components/forms/CaseForm';
+import LoopAtForm from './components/forms/LoopAtForm';
+import SelectForm from './components/forms/SelectForm';
+import GenericForm from './components/forms/GenericForm';
+import DoEndDoForm from './components/forms/DoEndDoForm';
+import WhileForm from './components/forms/WhileForm';
+import UpdateForm from './components/forms/UpdateForm';
+import InsertForm from './components/forms/InsertForm';
+import ModifyForm from './components/forms/ModifyForm';
+import DeleteForm from './components/forms/DeleteForm';
+import FormForm from './components/forms/FormForm';
+
+// Componenti di anteprima
+import CodePreview from './components/preview/CodePreview';
+
+// Componenti template
+import TemplatesPanel from './components/templates/TemplatesPanel';
+
+// Context e utility
+import { AbapProvider, useAbap } from './context/AbapContext';
+import useCodeGenerator from './hooks/useCodeGenerator';
+import constructTypes, { getConstructNameById } from './data/constructTypes';
+
+// Componente principale dell'applicazione
+const AppContent = () => {
+  // Utilizzo del context ABAP
+  const { 
+    selectedConstructType, 
+    setSelectedConstructType, 
+    favorites, 
+    addToFavorites, 
+    removeFromFavorites, 
+    generatedCode, 
+    setGeneratedCode,
+    settings,
+    updateSettings,
+    activeTab, 
+    setActiveTab,
+    updateFormState,
+    savedTemplates,
+    saveTemplate,
+    deleteTemplate
+  } = useAbap();
+  
+  // Utilizzo del generatore di codice
+  const { generateCode } = useCodeGenerator();
+  
+  // Costruzione delle opzioni del dropdown per i tipi di costrutti
+  const constructOptions = constructTypes.map(group => ({
+    label: group.group,
+    options: group.items
+  }));
+  
+  // Opzioni per i tabs
+  const tabOptions = [
+    { id: 'standard', label: 'Standard', icon: <FiCode /> },
+    { id: 'favorites', label: 'Preferiti', icon: <FiStar /> },
+    { id: 'templates', label: 'Template', icon: <FiClock /> },
+    { id: 'settings', label: 'Impostazioni', icon: <FiSettings /> }
+  ];
+  
+  // Gestione del cambio di tipo di costrutto
+  const handleConstructTypeChange = (e) => {
+    setSelectedConstructType(e.target.value);
+  };
+  
+  // Gestione della generazione del codice
+  const handleGenerateCode = (constructType, formData) => {
+    const code = generateCode(constructType, formData, {
+      autoFormat: settings.autoFormat
+    });
+    
+    if (code) {
+      setGeneratedCode(code);
+    }
+  };
+  
+  // Rendering del form appropriato in base al tipo di costrutto selezionato
+  const renderForm = () => {
+    switch (selectedConstructType) {
+      case 'if-else':
+        return <IfElseForm onGenerate={handleGenerateCode} />;
+      case 'case':
+        return <CaseForm onGenerate={handleGenerateCode} />;
+      case 'loop-at':
+        return <LoopAtForm onGenerate={handleGenerateCode} />;
+      case 'select':
+        return <SelectForm onGenerate={handleGenerateCode} />;
+      case 'do-enddo':
+        return <DoEndDoForm onGenerate={handleGenerateCode} />;
+      case 'while':
+        return <WhileForm onGenerate={handleGenerateCode} />;
+      case 'update':
+        return <UpdateForm onGenerate={handleGenerateCode} />;
+      case 'insert':
+        return <InsertForm onGenerate={handleGenerateCode} />;
+      case 'modify':
+        return <ModifyForm onGenerate={handleGenerateCode} />;
+      case 'delete':
+        return <DeleteForm onGenerate={handleGenerateCode} />;
+      case 'form':
+        return <FormForm onGenerate={handleGenerateCode} />;
+      default:
+        return <GenericForm constructType={selectedConstructType} onGenerate={handleGenerateCode} />;
+    }
+  };

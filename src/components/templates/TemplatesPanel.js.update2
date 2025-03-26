@@ -1,0 +1,111 @@
+import React, { useState } from 'react';
+import styled from 'styled-components';
+import { FiTrash2, FiEdit, FiCopy, FiEye } from 'react-icons/fi';
+import Button from '../common/Button';
+import SearchBar from '../search/SearchBar';
+import { useAbap } from '../../context/AbapContext';
+
+// Componente per visualizzare e gestire i template salvati
+const TemplatesPanel = ({ onSelectTemplate }) => {
+  const { savedTemplates, setGeneratedCode, deleteTemplate } = useAbap();
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Filtra i template per la ricerca
+  const filteredTemplates = savedTemplates.filter(template => 
+    template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    template.constructType.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  // Gestisce la selezione di un template
+  const handleSelectTemplate = (template) => {
+    if (onSelectTemplate) {
+      onSelectTemplate(template);
+    }
+  };
+  
+  // Gestisce l'anteprima di un template nel pannello di output
+  const handlePreviewTemplate = (template) => {
+    if (template.generatedCode) {
+      setGeneratedCode(template.generatedCode);
+    }
+  };
+  
+  // Gestisce l'eliminazione di un template
+  const handleDeleteTemplate = (id) => {
+    if (window.confirm('Sei sicuro di voler eliminare questo template?')) {
+      deleteTemplate(id);
+    }
+  };
+  
+  // Formatta la data di creazione del template
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('it-IT', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+  
+  return (
+    <Container>
+      <SearchBar
+        onSearch={setSearchTerm}
+        placeholder="Cerca template..."
+      />
+      
+      {filteredTemplates.length === 0 ? (
+        <EmptyState>
+          <p>Nessun template salvato. Crea e salva i tuoi template per ritrovarli qui.</p>
+        </EmptyState>
+      ) : (
+        <TemplatesList>
+          {filteredTemplates.map(template => (
+            <TemplateItem key={template.id}>
+              <TemplateHeader>
+                <TemplateName>{template.name}</TemplateName>
+                <TemplateType>{template.constructType}</TemplateType>
+              </TemplateHeader>
+              
+              <TemplateDate>
+                Creato: {formatDate(template.timestamp)}
+              </TemplateDate>
+              
+              <TemplateActions>
+                <Button
+                  variant="text"
+                  size="small"
+                  icon={<FiCopy />}
+                  onClick={() => handleSelectTemplate(template)}
+                  title="Usa questo template"
+                >
+                  Usa
+                </Button>
+                <Button
+                  variant="text"
+                  size="small"
+                  icon={<FiEye />}
+                  onClick={() => handlePreviewTemplate(template)}
+                  title="Anteprima del codice"
+                >
+                  Anteprima
+                </Button>
+                <Button
+                  variant="text"
+                  size="small"
+                  icon={<FiTrash2 />}
+                  onClick={() => handleDeleteTemplate(template.id)}
+                  title="Elimina questo template"
+                >
+                  Rimuovi
+                </Button>
+              </TemplateActions>
+            </TemplateItem>
+          ))}
+        </TemplatesList>
+      )}
+    </Container>
+  );
+};

@@ -1,0 +1,17 @@
+  // Gestisce il salvataggio come template
+  const handleSaveTemplate = () => {
+    const { saveTemplate, selectedConstructType, formState } = useAbap();
+    
+    // Richiedi un nome per il template
+    const name = prompt('Inserisci un nome per questo modello:');
+    if (name) {
+      // Ottieni i dati del form per il tipo di costrutto selezionato
+      const formData = formState[selectedConstructType] || {};
+      
+      // Salva il template
+      saveTemplate(name, selectedConstructType, formData, code);
+      
+      // Mostra un messaggio di conferma
+      alert(`Template "${name}" salvato con successo!`);
+    }
+  };
