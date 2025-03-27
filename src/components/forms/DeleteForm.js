@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
 const DeleteForm = ({ onGenerate }) => {
   // Stato locale del form
@@ -48,8 +50,7 @@ const DeleteForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Tabella:">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="table"
           value={formData.table}
           onChange={handleChange}
@@ -70,8 +71,7 @@ const DeleteForm = ({ onGenerate }) => {
       
       {formData.deleteType === 'where' && (
         <FormGroup label="Condizione WHERE:">
-          <input
-            type="text"
+          <ControlledInput type="text"
             name="where"
             value={formData.where}
             onChange={handleChange}
@@ -82,8 +82,7 @@ const DeleteForm = ({ onGenerate }) => {
       
       {formData.deleteType === 'table' && (
         <FormGroup label="Tabella interna di origine:">
-          <input
-            type="text"
+          <ControlledInput type="text"
             name="source"
             value={formData.source}
             onChange={handleChange}
@@ -94,8 +93,7 @@ const DeleteForm = ({ onGenerate }) => {
       
       {formData.deleteType === 'index' && (
         <FormGroup label="Indice:">
-          <input
-            type="text"
+          <ControlledInput type="text"
             name="index"
             value={formData.index}
             onChange={handleChange}

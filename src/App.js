@@ -26,6 +26,19 @@ import InsertForm from './components/forms/InsertForm';
 import ModifyForm from './components/forms/ModifyForm';
 import DeleteForm from './components/forms/DeleteForm';
 import FormForm from './components/forms/FormForm';
+import StructureForm from './components/forms/StructureForm';
+import FieldSymbolForm from './components/forms/FieldSymbolForm';
+import InternalTableForm from './components/forms/InternalTableForm';
+import DataDeclarationForm from './components/forms/DataDeclarationForm';
+import TryCatchForm from './components/forms/TryCatchForm';
+import RaiseExceptionForm from './components/forms/RaiseExceptionForm';
+import MessageForm from './components/forms/MessageForm';
+import ClassForm from './components/forms/ClassForm';
+import InterfaceForm from './components/forms/InterfaceForm';
+import MethodChainForm from './components/forms/MethodChainForm';
+import MethodDefinitionForm from './components/forms/MethodDefinitionForm';
+import AlvGridForm from './components/forms/AlvGridForm';
+import BapiCallForm from './components/forms/BapiCallForm';
 
 // Componenti di anteprima
 import CodePreview from './components/preview/CodePreview';
@@ -183,6 +196,32 @@ const AppContent = () => {
         return <DeleteForm onGenerate={handleGenerateCode} />;
       case 'form':
         return <FormForm onGenerate={handleGenerateCode} />;
+      case 'structure':
+        return <StructureForm onGenerate={handleGenerateCode} />;
+      case 'field-symbol':
+        return <FieldSymbolForm onGenerate={handleGenerateCode} />;
+      case 'internal-table':
+        return <InternalTableForm onGenerate={handleGenerateCode} />;
+      case 'data-declaration':
+        return <DataDeclarationForm onGenerate={handleGenerateCode} />;
+      case 'try-catch':
+        return <TryCatchForm onGenerate={handleGenerateCode} />;
+      case 'raise':
+        return <RaiseExceptionForm onGenerate={handleGenerateCode} />;
+      case 'message':
+        return <MessageForm onGenerate={handleGenerateCode} />;
+      case 'class':
+        return <ClassForm onGenerate={handleGenerateCode} />;
+      case 'interface':
+        return <InterfaceForm onGenerate={handleGenerateCode} />;
+      case 'method-chain':
+        return <MethodChainForm onGenerate={handleGenerateCode} />;
+      case 'method-definition':
+        return <MethodDefinitionForm onGenerate={handleGenerateCode} />;
+      case 'alv-grid':
+        return <AlvGridForm onGenerate={handleGenerateCode} />;
+      case 'bapi-call':
+        return <BapiCallForm onGenerate={handleGenerateCode} />;
       default:
         return <GenericForm constructType={selectedConstructType} onGenerate={handleGenerateCode} />;
     }

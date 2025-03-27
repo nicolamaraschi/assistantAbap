@@ -56,16 +56,22 @@ export const AbapProvider = ({ children }) => {
   };
   
   // Salva un modello
-  const saveTemplate = (name, constructType, formData) => {
+  const saveTemplate = (name, constructType, formData, generatedCode) => {
     const template = {
       id: Date.now().toString(),
       name,
       constructType,
       formData,
+      generatedCode,
       timestamp: new Date().toISOString()
     };
     
     setSavedTemplates([...savedTemplates, template]);
+  };
+  
+  // Elimina un template
+  const deleteTemplate = (id) => {
+    setSavedTemplates(savedTemplates.filter(template => template.id !== id));
   };
   
   // Aggiorna le impostazioni
@@ -85,6 +91,7 @@ export const AbapProvider = ({ children }) => {
     removeFromFavorites,
     savedTemplates,
     saveTemplate,
+    deleteTemplate,
     generatedCode,
     setGeneratedCode,
     settings,

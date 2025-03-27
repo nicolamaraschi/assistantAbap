@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
 const WhileForm = ({ onGenerate }) => {
   // Stato locale del form
@@ -45,8 +47,7 @@ const WhileForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Condizione:">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="condition"
           value={formData.condition}
           onChange={handleChange}
@@ -55,7 +56,7 @@ const WhileForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Contenuto del loop:">
-        <textarea
+        <ControlledTextarea
           name="content"
           value={formData.content}
           onChange={handleChange}

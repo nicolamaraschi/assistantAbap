@@ -6,14 +6,15 @@ import { useAbap } from '../../context/AbapContext';
 import ControlledInput from '../common/ControlledInput';
 import ControlledTextarea from '../common/ControlledTextarea';
 
-const ModifyForm = ({ onGenerate }) => {
+const BapiCallForm = ({ onGenerate }) => {
   // Stato locale del form
   const [formData, setFormData] = useState({
-    table: 'lt_table',
-    source: 'ls_line',
-    index: '',
-    addTransporting: false,
-    fields: 'field1 field2 field3'
+    bapiName: 'BAPI_USER_GET_DETAIL',
+    importsSection: 'USERNAME = lv_username',
+    exportsSection: 'ADDRESS = ls_address\nLOGONDATA = ls_logondata',
+    tablesSection: 'PROFILES = lt_profiles\nACTGROUPS = lt_actgroups',
+    checkReturn: true,
+    addComments: true
   });
   
   // Accesso al context
@@ -21,14 +22,14 @@ const ModifyForm = ({ onGenerate }) => {
   
   // Carica lo stato salvato nel contesto
   useEffect(() => {
-    if (formState['modify']) {
-      setFormData(formState['modify']);
+    if (formState['bapi-call']) {
+      setFormData(formState['bapi-call']);
     }
   }, [formState]);
   
   // Salva lo stato nel contesto quando cambia
   useEffect(() => {
-    updateFormState('modify', formData);
+    updateFormState('bapi-call', formData);
   }, [formData, updateFormState]);
   
   // Gestisce il cambiamento dei campi
@@ -43,57 +44,69 @@ const ModifyForm = ({ onGenerate }) => {
   // Gestisce la generazione del codice
   const handleGenerate = () => {
     if (onGenerate) {
-      onGenerate('modify', formData);
+      onGenerate('bapi-call', formData);
     }
   };
   
   return (
     <FormContainer>
-      <FormGroup label="Tabella da modificare:">
+      <FormGroup label="Nome BAPI:">
         <ControlledInput type="text"
-          name="table"
-          value={formData.table}
+          name="bapiName"
+          value={formData.bapiName}
           onChange={handleChange}
         />
       </FormGroup>
       
-      <FormGroup label="Struttura di origine:">
-        <ControlledInput type="text"
-          name="source"
-          value={formData.source}
+      <FormGroup label="Parametri IMPORTING:">
+        <ControlledTextarea
+          name="importsSection"
+          value={formData.importsSection}
           onChange={handleChange}
+          rows={4}
+          placeholder="es. USERNAME = lv_username"
         />
       </FormGroup>
       
-      <FormGroup label="Indice (opzionale):">
-        <ControlledInput type="text"
-          name="index"
-          value={formData.index}
+      <FormGroup label="Parametri EXPORTING:">
+        <ControlledTextarea
+          name="exportsSection"
+          value={formData.exportsSection}
           onChange={handleChange}
-          placeholder="es. lv_index o un numero"
+          rows={4}
+          placeholder="es. ADDRESS = ls_address"
+        />
+      </FormGroup>
+      
+      <FormGroup label="Parametri TABLES:">
+        <ControlledTextarea
+          name="tablesSection"
+          value={formData.tablesSection}
+          onChange={handleChange}
+          rows={4}
+          placeholder="es. PROFILES = lt_profiles"
         />
       </FormGroup>
       
       <FormGroup inline>
         <ControlledInput type="checkbox"
-          name="addTransporting"
-          checked={formData.addTransporting}
+          name="checkReturn"
+          checked={formData.checkReturn}
           onChange={handleChange}
-          id="addTransporting"
+          id="checkReturn"
         />
-        <label htmlFor="addTransporting">Specifica campi da trasportare (TRANSPORTING)</label>
+        <label htmlFor="checkReturn">Verifica parametro RETURN</label>
       </FormGroup>
       
-      {formData.addTransporting && (
-        <FormGroup label="Campi da trasportare:">
-          <ControlledInput type="text"
-            name="fields"
-            value={formData.fields}
-            onChange={handleChange}
-            placeholder="es. field1 field2 field3"
-          />
-        </FormGroup>
-      )}
+      <FormGroup inline>
+        <ControlledInput type="checkbox"
+          name="addComments"
+          checked={formData.addComments}
+          onChange={handleChange}
+          id="addComments"
+        />
+        <label htmlFor="addComments">Aggiungi commenti esplicativi</label>
+      </FormGroup>
       
       <ButtonContainer>
         <Button 
@@ -129,10 +142,15 @@ const FormContainer = styled.div`
     border-color: #0066cc;
     box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
   }
+  
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
 `;
 
 const ButtonContainer = styled.div`
   margin-top: 20px;
 `;
 
-export default ModifyForm;
+export default BapiCallForm;

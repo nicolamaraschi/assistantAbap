@@ -187,4 +187,4 @@ const TemplateActions = styled.div`
   margin-top: 10px;
 `;
 
-export default TemplatesPane
+export default TemplatesPanel;

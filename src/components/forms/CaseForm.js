@@ -4,6 +4,8 @@ import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
 // Componente per il form CASE
 const CaseForm = ({ onGenerate }) => {
@@ -88,8 +90,7 @@ const CaseForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Variabile di controllo:">
-        <input
-          type="text"
+        <ControlledInput type="text"
           value={formData.variable}
           onChange={handleVariableChange}
         />
@@ -100,8 +101,7 @@ const CaseForm = ({ onGenerate }) => {
           <CaseItem key={caseItem.id}>
             <CaseHeader>
               <FormGroup label="Valore:" inline>
-                <input
-                  type="text"
+                <ControlledInput type="text"
                   value={caseItem.value}
                   onChange={(e) => handleCaseChange(caseItem.id, 'value', e.target.value)}
                 />
@@ -114,7 +114,7 @@ const CaseForm = ({ onGenerate }) => {
               />
             </CaseHeader>
             <FormGroup label="Azione:">
-              <textarea
+              <ControlledTextarea
                 value={caseItem.action}
                 onChange={(e) => handleCaseChange(caseItem.id, 'action', e.target.value)}
                 rows={3}
@@ -134,7 +134,7 @@ const CaseForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Azione predefinita (WHEN OTHERS):">
-        <textarea
+        <ControlledTextarea
           value={formData.defaultAction}
           onChange={handleDefaultActionChange}
           rows={3}

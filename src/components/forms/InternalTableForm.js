@@ -6,14 +6,15 @@ import { useAbap } from '../../context/AbapContext';
 import ControlledInput from '../common/ControlledInput';
 import ControlledTextarea from '../common/ControlledTextarea';
 
-const ModifyForm = ({ onGenerate }) => {
+const InternalTableForm = ({ onGenerate }) => {
   // Stato locale del form
   const [formData, setFormData] = useState({
-    table: 'lt_table',
-    source: 'ls_line',
-    index: '',
-    addTransporting: false,
-    fields: 'field1 field2 field3'
+    name: 'lt_table',
+    type: 'ty_structure',
+    tableType: 'STANDARD',
+    keyType: 'DEFAULT',
+    initialSize: '10',
+    withHeader: false
   });
   
   // Accesso al context
@@ -21,14 +22,14 @@ const ModifyForm = ({ onGenerate }) => {
   
   // Carica lo stato salvato nel contesto
   useEffect(() => {
-    if (formState['modify']) {
-      setFormData(formState['modify']);
+    if (formState['internal-table']) {
+      setFormData(formState['internal-table']);
     }
   }, [formState]);
   
   // Salva lo stato nel contesto quando cambia
   useEffect(() => {
-    updateFormState('modify', formData);
+    updateFormState('internal-table', formData);
   }, [formData, updateFormState]);
   
   // Gestisce il cambiamento dei campi
@@ -43,57 +44,73 @@ const ModifyForm = ({ onGenerate }) => {
   // Gestisce la generazione del codice
   const handleGenerate = () => {
     if (onGenerate) {
-      onGenerate('modify', formData);
+      onGenerate('internal-table', formData);
     }
   };
   
   return (
     <FormContainer>
-      <FormGroup label="Tabella da modificare:">
+      <FormGroup label="Nome della tabella interna:">
         <ControlledInput type="text"
-          name="table"
-          value={formData.table}
+          name="name"
+          value={formData.name}
           onChange={handleChange}
         />
       </FormGroup>
       
-      <FormGroup label="Struttura di origine:">
+      <FormGroup label="Tipo di riga:">
         <ControlledInput type="text"
-          name="source"
-          value={formData.source}
+          name="type"
+          value={formData.type}
           onChange={handleChange}
+          placeholder="es. ty_structure, string, ref to cl_class"
         />
       </FormGroup>
       
-      <FormGroup label="Indice (opzionale):">
-        <ControlledInput type="text"
-          name="index"
-          value={formData.index}
+      <FormGroup label="Tipo di tabella:">
+        <select
+          name="tableType"
+          value={formData.tableType}
           onChange={handleChange}
-          placeholder="es. lv_index o un numero"
+        >
+          <option value="STANDARD">STANDARD TABLE</option>
+          <option value="SORTED">SORTED TABLE</option>
+          <option value="HASHED">HASHED TABLE</option>
+          <option value="INDEX">INDEX TABLE</option>
+        </select>
+      </FormGroup>
+      
+      <FormGroup label="Tipo di chiave:">
+        <select
+          name="keyType"
+          value={formData.keyType}
+          onChange={handleChange}
+        >
+          <option value="DEFAULT">DEFAULT KEY</option>
+          <option value="STANDARD">STANDARD KEY</option>
+          <option value="EMPTY">EMPTY KEY</option>
+          <option value="NON-UNIQUE">NON-UNIQUE KEY</option>
+          <option value="UNIQUE">UNIQUE KEY</option>
+        </select>
+      </FormGroup>
+      
+      <FormGroup label="Dimensione iniziale (opzionale):">
+        <ControlledInput type="text"
+          name="initialSize"
+          value={formData.initialSize}
+          onChange={handleChange}
         />
       </FormGroup>
       
       <FormGroup inline>
         <ControlledInput type="checkbox"
-          name="addTransporting"
-          checked={formData.addTransporting}
+          name="withHeader"
+          checked={formData.withHeader}
           onChange={handleChange}
-          id="addTransporting"
+          id="withHeader"
         />
-        <label htmlFor="addTransporting">Specifica campi da trasportare (TRANSPORTING)</label>
+        <label htmlFor="withHeader">Aggiungi header line</label>
       </FormGroup>
-      
-      {formData.addTransporting && (
-        <FormGroup label="Campi da trasportare:">
-          <ControlledInput type="text"
-            name="fields"
-            value={formData.fields}
-            onChange={handleChange}
-            placeholder="es. field1 field2 field3"
-          />
-        </FormGroup>
-      )}
       
       <ButtonContainer>
         <Button 
@@ -113,7 +130,7 @@ const FormContainer = styled.div`
   padding: 15px;
   
   input[type="text"],
-  textarea {
+  select {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
@@ -124,7 +141,7 @@ const FormContainer = styled.div`
   }
   
   input[type="text"]:focus,
-  textarea:focus {
+  select:focus {
     outline: none;
     border-color: #0066cc;
     box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
@@ -135,4 +152,4 @@ const ButtonContainer = styled.div`
   margin-top: 20px;
 `;
 
-export default ModifyForm;
+export default InternalTableForm;

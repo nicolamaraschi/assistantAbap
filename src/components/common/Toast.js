@@ -10,75 +10,6 @@ const TOAST_TYPES = {
   INFO: 'info'
 };
 
-// Componente Toast per messaggi di notifica
-const Toast = ({ message, type = TOAST_TYPES.INFO, duration = 3000, onClose }) => {
-  const [visible, setVisible] = useState(true);
-  
-  // Imposta l'icona in base al tipo
-  const getIcon = () => {
-    switch (type) {
-      case TOAST_TYPES.SUCCESS:
-        return <FiCheck />;
-      case TOAST_TYPES.ERROR:
-        return <FiAlertTriangle />;
-      case TOAST_TYPES.WARNING:
-        return <FiAlertTriangle />;
-      case TOAST_TYPES.INFO:
-      default:
-        return <FiInfo />;
-    }
-  };
-  
-  // Chiude automaticamente il toast dopo la durata specificata
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false);
-      
-      // Aspetta che l'animazione sia terminata prima di chiamare onClose
-      setTimeout(() => {
-        if (onClose) onClose();
-      }, 300);
-    }, duration);
-    
-    return () => clearTimeout(timer);
-  }, [duration, onClose]);
-  
-  // Gestisce la chiusura manuale
-  const handleClose = () => {
-    setVisible(false);
-    
-    // Aspetta che l'animazione sia terminata prima di chiamare onClose
-    setTimeout(() => {
-      if (onClose) onClose();
-    }, 300);
-  };
-  
-  return (
-    <ToastContainer visible={visible} type={type}>
-      <IconContainer>{getIcon()}</IconContainer>
-      <MessageText>{message}</MessageText>
-      <CloseButton onClick={handleClose}>
-        <FiX />
-      </CloseButton>
-    </ToastContainer>
-  );
-};
-
-// Container per visualizzare più toast impilati
-const ToastContainer = styled.div`
-  position: fixed;
-  top: ${props => props.position === 'top' ? '20px' : 'auto'};
-  bottom: ${props => props.position === 'bottom' ? '20px' : 'auto'};
-  right: 20px;
-  z-index: 1000;
-  max-width: 350px;
-  min-width: 250px;
-`;
-
-// Esportazione delle utilità per gestire i toast a livello globale
-export { TOAST_TYPES, ToastContainer };
-export default Toast;
-
 // Animazioni
 const slideIn = keyframes`
   from {
@@ -103,7 +34,7 @@ const slideOut = keyframes`
 `;
 
 // Stili per i singoli toast
-const ToastContainer = styled.div`
+const ToastWrapper = styled.div`
   display: flex;
   align-items: center;
   background: ${props => {
@@ -155,3 +86,61 @@ const CloseButton = styled.button`
     opacity: 1;
   }
 `;
+
+// Componente Toast per messaggi di notifica
+const Toast = ({ message, type = TOAST_TYPES.INFO, duration = 3000, onClose }) => {
+  const [visible, setVisible] = useState(true);
+  
+  // Imposta l'icona in base al tipo
+  const getIcon = () => {
+    switch (type) {
+      case TOAST_TYPES.SUCCESS:
+        return <FiCheck />;
+      case TOAST_TYPES.ERROR:
+        return <FiAlertTriangle />;
+      case TOAST_TYPES.WARNING:
+        return <FiAlertTriangle />;
+      case TOAST_TYPES.INFO:
+      default:
+        return <FiInfo />;
+    }
+  };
+  
+  // Chiude automaticamente il toast dopo la durata specificata
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setVisible(false);
+      
+      // Aspetta che l'animazione sia terminata prima di chiamare onClose
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 300);
+    }, duration);
+    
+    return () => clearTimeout(timer);
+  }, [duration, onClose]);
+  
+  // Gestisce la chiusura manuale
+  const handleClose = () => {
+    setVisible(false);
+    
+    // Aspetta che l'animazione sia terminata prima di chiamare onClose
+    setTimeout(() => {
+      if (onClose) onClose();
+    }, 300);
+  };
+  
+  return (
+    <ToastWrapper visible={visible} type={type}>
+      <IconContainer>{getIcon()}</IconContainer>
+      <MessageText>{message}</MessageText>
+      <CloseButton onClick={handleClose}>
+        <FiX />
+      </CloseButton>
+    </ToastWrapper>
+  );
+};
+
+// Esportazione delle utilità per gestire i toast a livello globale
+export { TOAST_TYPES };
+export default Toast;

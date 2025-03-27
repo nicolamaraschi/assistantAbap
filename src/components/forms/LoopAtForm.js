@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
 // Componente per il form LOOP AT
 const LoopAtForm = ({ onGenerate }) => {
@@ -50,8 +52,7 @@ const LoopAtForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Tabella:">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="table"
           value={formData.table}
           onChange={handleChange}
@@ -59,8 +60,7 @@ const LoopAtForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup inline>
-        <input
-          type="checkbox"
+        <ControlledInput type="checkbox"
           name="useAssigning"
           checked={formData.useAssigning}
           onChange={handleChange}
@@ -70,8 +70,7 @@ const LoopAtForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label={formData.useAssigning ? "Nome Field-Symbol:" : "Variabile di destinazione:"}>
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="variable"
           value={formData.variable}
           onChange={handleChange}
@@ -79,8 +78,7 @@ const LoopAtForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Condizione WHERE (opzionale):">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="whereCondition"
           value={formData.whereCondition}
           onChange={handleChange}
@@ -89,8 +87,7 @@ const LoopAtForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup inline>
-        <input
-          type="checkbox"
+        <ControlledInput type="checkbox"
           name="addIndex"
           checked={formData.addIndex}
           onChange={handleChange}
@@ -100,7 +97,7 @@ const LoopAtForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Contenuto del loop:">
-        <textarea
+        <ControlledTextarea
           name="content"
           value={formData.content}
           onChange={handleChange}

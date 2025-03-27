@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
 const InsertForm = ({ onGenerate }) => {
   // Stato locale del form
@@ -47,8 +49,7 @@ const InsertForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Tabella:">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="table"
           value={formData.table}
           onChange={handleChange}
@@ -68,7 +69,7 @@ const InsertForm = ({ onGenerate }) => {
       
       {formData.insertType === 'values' ? (
         <FormGroup label="Campi da inserire:">
-          <textarea
+          <ControlledTextarea
             name="fields"
             value={formData.fields}
             onChange={handleChange}
@@ -78,8 +79,7 @@ const InsertForm = ({ onGenerate }) => {
         </FormGroup>
       ) : (
         <FormGroup label="Tabella interna di origine:">
-          <input
-            type="text"
+          <ControlledInput type="text"
             name="source"
             value={formData.source}
             onChange={handleChange}

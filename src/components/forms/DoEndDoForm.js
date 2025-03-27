@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
 const DoEndDoForm = ({ onGenerate }) => {
   // Stato locale del form
@@ -47,8 +49,7 @@ const DoEndDoForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Numero di iterazioni (opzionale):">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="times"
           value={formData.times}
           onChange={handleChange}
@@ -57,7 +58,7 @@ const DoEndDoForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Contenuto del loop:">
-        <textarea
+        <ControlledTextarea
           name="content"
           value={formData.content}
           onChange={handleChange}
@@ -66,8 +67,7 @@ const DoEndDoForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Condizione di controllo (opzionale):">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="condition"
           value={formData.condition}
           onChange={handleChange}
@@ -76,8 +76,7 @@ const DoEndDoForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup inline>
-        <input
-          type="checkbox"
+        <ControlledInput type="checkbox"
           name="addExitAt"
           checked={formData.addExitAt}
           onChange={handleChange}

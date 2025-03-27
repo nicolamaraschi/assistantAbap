@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
 // Componente per il form SELECT
 const SelectForm = ({ onGenerate }) => {
@@ -55,8 +57,7 @@ const SelectForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Campi da selezionare:" tooltip="Specificare i campi separati da virgola, o * per tutti">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="fields"
           value={formData.fields}
           onChange={handleChange}
@@ -64,8 +65,7 @@ const SelectForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Tabella:">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="table"
           value={formData.table}
           onChange={handleChange}
@@ -73,8 +73,7 @@ const SelectForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="INTO:">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="into"
           value={formData.into}
           onChange={handleChange}
@@ -83,8 +82,7 @@ const SelectForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="WHERE (opzionale):">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="where"
           value={formData.where}
           onChange={handleChange}
@@ -96,8 +94,7 @@ const SelectForm = ({ onGenerate }) => {
         <SectionTitle>Opzioni avanzate</SectionTitle>
         
         <FormGroup label="ORDER BY (opzionale):">
-          <input
-            type="text"
+          <ControlledInput type="text"
             name="orderBy"
             value={formData.orderBy}
             onChange={handleChange}
@@ -106,8 +103,7 @@ const SelectForm = ({ onGenerate }) => {
         </FormGroup>
         
         <FormGroup label="GROUP BY (opzionale):">
-          <input
-            type="text"
+          <ControlledInput type="text"
             name="groupBy"
             value={formData.groupBy}
             onChange={handleChange}
@@ -116,8 +112,7 @@ const SelectForm = ({ onGenerate }) => {
         </FormGroup>
         
         <FormGroup label="HAVING (opzionale):">
-          <input
-            type="text"
+          <ControlledInput type="text"
             name="having"
             value={formData.having}
             onChange={handleChange}
@@ -126,8 +121,7 @@ const SelectForm = ({ onGenerate }) => {
         </FormGroup>
         
         <FormGroup inline>
-          <input
-            type="checkbox"
+          <ControlledInput type="checkbox"
             name="addJoin"
             checked={formData.addJoin}
             onChange={handleChange}
@@ -151,8 +145,7 @@ const SelectForm = ({ onGenerate }) => {
             </FormGroup>
             
             <FormGroup label="Tabella JOIN:">
-              <input
-                type="text"
+              <ControlledInput type="text"
                 name="joinTable"
                 value={formData.joinTable}
                 onChange={handleChange}
@@ -160,8 +153,7 @@ const SelectForm = ({ onGenerate }) => {
             </FormGroup>
             
             <FormGroup label="Condizione JOIN:">
-              <input
-                type="text"
+              <ControlledInput type="text"
                 name="joinCondition"
                 value={formData.joinCondition}
                 onChange={handleChange}

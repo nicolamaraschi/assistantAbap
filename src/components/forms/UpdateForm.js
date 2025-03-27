@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
 const UpdateForm = ({ onGenerate }) => {
   // Stato locale del form
@@ -46,8 +48,7 @@ const UpdateForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Tabella:">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="table"
           value={formData.table}
           onChange={handleChange}
@@ -55,7 +56,7 @@ const UpdateForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Campi da aggiornare:">
-        <textarea
+        <ControlledTextarea
           name="fields"
           value={formData.fields}
           onChange={handleChange}
@@ -65,8 +66,7 @@ const UpdateForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Condizione WHERE:">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="where"
           value={formData.where}
           onChange={handleChange}

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
 // Componente form generico per tutti i costrutti non ancora implementati
 const GenericForm = ({ constructType, onGenerate }) => {
@@ -31,7 +33,7 @@ const GenericForm = ({ constructType, onGenerate }) => {
       </FormGroup>
       
       <FormGroup>
-        <textarea
+        <ControlledTextarea
           name="content"
           value={formData.content}
           onChange={handleChange}

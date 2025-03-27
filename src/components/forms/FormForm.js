@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
 const FormForm = ({ onGenerate }) => {
   // Stato locale del form
@@ -46,8 +48,7 @@ const FormForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Nome del Form:">
-        <input
-          type="text"
+        <ControlledInput type="text"
           name="name"
           value={formData.name}
           onChange={handleChange}
@@ -55,7 +56,7 @@ const FormForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Parametri (USING):">
-        <textarea
+        <ControlledTextarea
           name="params"
           value={formData.params}
           onChange={handleChange}
@@ -65,7 +66,7 @@ const FormForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Contenuto del Form:">
-        <textarea
+        <ControlledTextarea
           name="content"
           value={formData.content}
           onChange={handleChange}
