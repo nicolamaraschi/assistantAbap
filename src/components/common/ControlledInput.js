@@ -1,4 +1,5 @@
-import React, { useRef, useEffect } from 'react';
+// Modifica di src/components/common/ControlledInput.js
+import React, { useRef, useLayoutEffect } from 'react';
 import styled from 'styled-components';
 
 const ControlledInput = ({ 
@@ -11,23 +12,19 @@ const ControlledInput = ({
   const cursorPositionRef = useRef(null);
   
   const handleChange = (e) => {
+    // Salva la posizione del cursore
     cursorPositionRef.current = e.target.selectionStart;
     onChange(e);
   };
   
-  useEffect(() => {
-    if (inputRef.current && cursorPositionRef.current !== null) {
-      const input = inputRef.current;
-      const position = cursorPositionRef.current;
-      
-      requestAnimationFrame(() => {
-        if (document.activeElement === input) {
-          input.selectionStart = position;
-          input.selectionEnd = position;
-        }
-      });
+  // useLayoutEffect è sincrono e viene eseguito prima del painting del browser
+  useLayoutEffect(() => {
+    const input = inputRef.current;
+    if (input && cursorPositionRef.current !== null && document.activeElement === input) {
+      input.selectionStart = cursorPositionRef.current;
+      input.selectionEnd = cursorPositionRef.current;
     }
-  }, [value]);
+  });
   
   return (
     <StyledInput

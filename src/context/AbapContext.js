@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
 
 // Creazione del contesto
@@ -29,18 +29,42 @@ export const AbapProvider = ({ children }) => {
   // Gestione della tab attiva
   const [activeTab, setActiveTab] = useState('standard');
   
-  // Stato del form per ogni tipo di costrutto
-  const [formState, setFormState] = useState({});
+  // Usa useRef invece di useState per lo stato del form per evitare rirender
+  const formStateRef = useRef({});
   
-  // Aggiorna lo stato del form per un determinato tipo di costrutto
-  const updateFormState = (constructType, newState) => {
-    setFormState(prevState => ({
-      ...prevState,
-      [constructType]: {
-        ...prevState[constructType],
-        ...newState
+  // Carica lo stato iniziale dal localStorage
+  const savedFormState = useRef(false);
+  if (!savedFormState.current) {
+    try {
+      const saved = localStorage.getItem('abap-form-state');
+      if (saved) {
+        formStateRef.current = JSON.parse(saved);
       }
-    }));
+    } catch (e) {
+      console.error('Errore durante il caricamento dello stato dei form:', e);
+    }
+    savedFormState.current = true;
+  }
+  
+  // Funzione per aggiornare lo stato del form senza causare rirender
+  const updateFormState = (constructType, newState) => {
+    // Aggiorna lo stato nella ref
+    formStateRef.current = {
+      ...formStateRef.current,
+      [constructType]: newState
+    };
+    
+    // Salva nel localStorage senza causare rirender
+    try {
+      localStorage.setItem('abap-form-state', JSON.stringify(formStateRef.current));
+    } catch (e) {
+      console.error('Errore durante il salvataggio dello stato dei form:', e);
+    }
+  };
+  
+  // Funzione per leggere lo stato di un form specifico
+  const getFormState = (constructType) => {
+    return formStateRef.current[constructType] || null;
   };
   
   // Aggiungi un preferito
@@ -98,8 +122,9 @@ export const AbapProvider = ({ children }) => {
     updateSettings,
     activeTab,
     setActiveTab,
-    formState,
-    updateFormState
+    getFormState,
+    updateFormState,
+    formState: formStateRef.current // Esponi lo stato attuale come oggetto non reattivo
   };
 
   return (
