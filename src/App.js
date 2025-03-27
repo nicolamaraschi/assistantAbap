@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { FiSettings, FiStar, FiCode, FiClock, FiList, FiHelpCircle } from 'react-icons/fi';
+import { FiSettings, FiStar, FiCode, FiClock, FiList, FiHelpCircle,FiSearch } from 'react-icons/fi';
 
 // Componenti di layout
 import Header from './components/layout/Header';
@@ -39,6 +39,7 @@ import MethodChainForm from './components/forms/MethodChainForm';
 import MethodDefinitionForm from './components/forms/MethodDefinitionForm';
 import AlvGridForm from './components/forms/AlvGridForm';
 import BapiCallForm from './components/forms/BapiCallForm';
+import BreakpointAnalyzer from './components/debug/BreakpointAnalyzer';
 
 // Componenti di anteprima
 import CodePreview from './components/preview/CodePreview';
@@ -103,6 +104,8 @@ const AppContent = () => {
     { id: 'favorites', label: 'Preferiti', icon: <FiStar /> },
     { id: 'templates', label: 'Template', icon: <FiClock /> },
     { id: 'history', label: 'Cronologia', icon: <FiList /> },
+    { id: 'debug', label: 'Debug', icon: <FiSearch /> }, // Nuovo tab
+    { id: 'breakpoints', label: 'Breakpoints', icon: <FiSearch /> }, // Nuovo tab
     { id: 'help', label: 'Aiuto', icon: <FiHelpCircle /> },
     { id: 'settings', label: 'Impostazioni', icon: <FiSettings /> }
   ];
@@ -262,6 +265,13 @@ const AppContent = () => {
             />
           </div>
         );
+        case 'debug':
+          return (
+            <div>
+              <h3>Analisi Breakpoint</h3>
+              <BreakpointAnalyzer />
+            </div>
+          );
       case 'history':
         return (
           <div>
