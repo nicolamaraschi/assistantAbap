@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { FiSettings, FiStar, FiCode, FiClock, FiList, FiHelpCircle,FiSearch } from 'react-icons/fi';
+import { FiSettings, FiStar, FiCode, FiClock, FiList, FiHelpCircle, FiSearch } from 'react-icons/fi';
 
 // Componenti di layout
 import Header from './components/layout/Header';
@@ -176,58 +176,92 @@ const AppContent = () => {
   
   // Rendering del form appropriato in base al tipo di costrutto selezionato
   const renderForm = () => {
+    let FormComponent;
+    
     switch (selectedConstructType) {
       case 'if-else':
-        return <IfElseForm onGenerate={handleGenerateCode} />;
+        FormComponent = IfElseForm;
+        break;
       case 'case':
-        return <CaseForm onGenerate={handleGenerateCode} />;
+        FormComponent = CaseForm;
+        break;
       case 'loop-at':
-        return <LoopAtForm onGenerate={handleGenerateCode} />;
+        FormComponent = LoopAtForm;
+        break;
       case 'select':
-        return <SelectForm onGenerate={handleGenerateCode} />;
+        FormComponent = SelectForm;
+        break;
       case 'do-enddo':
-        return <DoEndDoForm onGenerate={handleGenerateCode} />;
+        FormComponent = DoEndDoForm;
+        break;
       case 'while':
-        return <WhileForm onGenerate={handleGenerateCode} />;
+        FormComponent = WhileForm;
+        break;
       case 'update':
-        return <UpdateForm onGenerate={handleGenerateCode} />;
+        FormComponent = UpdateForm;
+        break;
       case 'insert':
-        return <InsertForm onGenerate={handleGenerateCode} />;
+        FormComponent = InsertForm;
+        break;
       case 'modify':
-        return <ModifyForm onGenerate={handleGenerateCode} />;
+        FormComponent = ModifyForm;
+        break;
       case 'delete':
-        return <DeleteForm onGenerate={handleGenerateCode} />;
+        FormComponent = DeleteForm;
+        break;
       case 'form':
-        return <FormForm onGenerate={handleGenerateCode} />;
+        FormComponent = FormForm;
+        break;
       case 'structure':
-        return <StructureForm onGenerate={handleGenerateCode} />;
+        FormComponent = StructureForm;
+        break;
       case 'field-symbol':
-        return <FieldSymbolForm onGenerate={handleGenerateCode} />;
+        FormComponent = FieldSymbolForm;
+        break;
       case 'internal-table':
-        return <InternalTableForm onGenerate={handleGenerateCode} />;
+        FormComponent = InternalTableForm;
+        break;
       case 'data-declaration':
-        return <DataDeclarationForm onGenerate={handleGenerateCode} />;
+        FormComponent = DataDeclarationForm;
+        break;
       case 'try-catch':
-        return <TryCatchForm onGenerate={handleGenerateCode} />;
+        FormComponent = TryCatchForm;
+        break;
       case 'raise':
-        return <RaiseExceptionForm onGenerate={handleGenerateCode} />;
+        FormComponent = RaiseExceptionForm;
+        break;
       case 'message':
-        return <MessageForm onGenerate={handleGenerateCode} />;
+        FormComponent = MessageForm;
+        break;
       case 'class':
-        return <ClassForm onGenerate={handleGenerateCode} />;
+        FormComponent = ClassForm;
+        break;
       case 'interface':
-        return <InterfaceForm onGenerate={handleGenerateCode} />;
+        FormComponent = InterfaceForm;
+        break;
       case 'method-chain':
-        return <MethodChainForm onGenerate={handleGenerateCode} />;
+        FormComponent = MethodChainForm;
+        break;
       case 'method-definition':
-        return <MethodDefinitionForm onGenerate={handleGenerateCode} />;
+        FormComponent = MethodDefinitionForm;
+        break;
       case 'alv-grid':
-        return <AlvGridForm onGenerate={handleGenerateCode} />;
+        FormComponent = AlvGridForm;
+        break;
       case 'bapi-call':
-        return <BapiCallForm onGenerate={handleGenerateCode} />;
+        FormComponent = BapiCallForm;
+        break;
       default:
-        return <GenericForm constructType={selectedConstructType} onGenerate={handleGenerateCode} />;
+        FormComponent = GenericForm;
+        break;
     }
+    
+    return (
+      <>
+        <h3>{getConstructNameById(selectedConstructType)}</h3>
+        <FormComponent onGenerate={handleGenerateCode} />
+      </>
+    );
   };
   
   // Rendering della tab selezionata
@@ -375,7 +409,6 @@ const AppContent = () => {
               ]}
             />
             
-            <h3>{getConstructNameById(selectedConstructType)}</h3>
             {renderForm()}
           </div>
         );

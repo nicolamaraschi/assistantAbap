@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
-import useCursorPosition from '../../hooks/useCursorPosition';
 
 // Componente per il form IF-ELSE
 const IfElseForm = ({ onGenerate }) => {
@@ -17,11 +16,8 @@ const IfElseForm = ({ onGenerate }) => {
     elseIfAction: 'WRITE: / \'Condizione ELSEIF verificata\'.'
   });
   
-  // Hook per gestire la posizione del cursore
-  const { handleInputChange } = useCursorPosition();
-  
   // Accesso al context
-  const { updateFormState, formState, selectedConstructType } = useAbap();
+  const { updateFormState, formState } = useAbap();
   
   // Carica lo stato salvato nel contesto
   useEffect(() => {
@@ -37,12 +33,10 @@ const IfElseForm = ({ onGenerate }) => {
   
   // Gestisce il cambiamento dei campi
   const handleChange = (e) => {
-    handleInputChange(e, (newE) => {
-      const { name, value, type } = newE.target;
-      setFormData({
-        ...formData,
-        [name]: value
-      });
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value
     });
   };
   
@@ -56,21 +50,27 @@ const IfElseForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Condizione:">
-        <input
-          type="text"
-          name="condition"
-          value={formData.condition}
-          onChange={handleChange}
-        />
+        <StyledInputContainer>
+          <StyledInput
+            type="text"
+            name="condition"
+            value={formData.condition}
+            onChange={handleChange}
+          />
+          {!formData.condition && <PlaceholderText>Inserisci la condizione</PlaceholderText>}
+        </StyledInputContainer>
       </FormGroup>
       
       <FormGroup label="Blocco IF:">
-        <textarea
-          name="trueAction"
-          value={formData.trueAction}
-          onChange={handleChange}
-          rows={4}
-        />
+        <StyledTextareaContainer>
+          <StyledTextarea
+            name="trueAction"
+            value={formData.trueAction}
+            onChange={handleChange}
+            rows={4}
+          />
+          {!formData.trueAction && <PlaceholderText>Inserisci il codice per il blocco IF</PlaceholderText>}
+        </StyledTextareaContainer>
       </FormGroup>
       
       <FormGroup inline>
@@ -78,7 +78,7 @@ const IfElseForm = ({ onGenerate }) => {
           type="checkbox"
           name="addElseIf"
           checked={formData.addElseIf}
-          onChange={(e) => setFormData({...formData, addElseIf: e.target.checked})}
+          onChange={handleChange}
           id="addElseIf"
         />
         <label htmlFor="addElseIf">Aggiungi blocco ELSEIF</label>
@@ -87,32 +87,41 @@ const IfElseForm = ({ onGenerate }) => {
       {formData.addElseIf && (
         <>
           <FormGroup label="Condizione ELSEIF:">
-            <input
-              type="text"
-              name="elseIfCondition"
-              value={formData.elseIfCondition}
-              onChange={handleChange}
-            />
+            <StyledInputContainer>
+              <StyledInput
+                type="text"
+                name="elseIfCondition"
+                value={formData.elseIfCondition}
+                onChange={handleChange}
+              />
+              {!formData.elseIfCondition && <PlaceholderText>Inserisci la condizione ELSEIF</PlaceholderText>}
+            </StyledInputContainer>
           </FormGroup>
           
           <FormGroup label="Blocco ELSEIF:">
-            <textarea
-              name="elseIfAction"
-              value={formData.elseIfAction}
-              onChange={handleChange}
-              rows={4}
-            />
+            <StyledTextareaContainer>
+              <StyledTextarea
+                name="elseIfAction"
+                value={formData.elseIfAction}
+                onChange={handleChange}
+                rows={4}
+              />
+              {!formData.elseIfAction && <PlaceholderText>Inserisci il codice per il blocco ELSEIF</PlaceholderText>}
+            </StyledTextareaContainer>
           </FormGroup>
         </>
       )}
       
       <FormGroup label="Blocco ELSE:">
-        <textarea
-          name="falseAction"
-          value={formData.falseAction}
-          onChange={handleChange}
-          rows={4}
-        />
+        <StyledTextareaContainer>
+          <StyledTextarea
+            name="falseAction"
+            value={formData.falseAction}
+            onChange={handleChange}
+            rows={4}
+          />
+          {!formData.falseAction && <PlaceholderText>Inserisci il codice per il blocco ELSE</PlaceholderText>}
+        </StyledTextareaContainer>
       </FormGroup>
       
       <ButtonContainer>
@@ -131,33 +140,63 @@ const IfElseForm = ({ onGenerate }) => {
 // Stili del componente
 const FormContainer = styled.div`
   padding: 15px;
+`;
+
+const StyledInputContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Courier New', monospace;
+  background-color: transparent;
   
-  input[type="text"],
-  textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 15px;
-    transition: border-color 0.3s, box-shadow 0.3s;
-    font-family: 'Courier New', monospace;
-  }
-  
-  input[type="text"]:focus,
-  textarea:focus {
+  &:focus {
     outline: none;
     border-color: #0066cc;
     box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
   }
+`;
+
+const StyledTextareaContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const StyledTextarea = styled.textarea`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Courier New', monospace;
+  resize: vertical;
+  min-height: 80px;
+  background-color: transparent;
   
-  textarea {
-    resize: vertical;
-    min-height: 80px;
+  &:focus {
+    outline: none;
+    border-color: #0066cc;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
   }
-  
-  input[type="checkbox"] {
-    margin-right: 8px;
-  }
+`;
+
+const PlaceholderText = styled.div`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #aaa;
+  pointer-events: none;
+  z-index: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
 `;
 
 const ButtonContainer = styled.div`

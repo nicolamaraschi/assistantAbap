@@ -59,34 +59,34 @@ const BapiCallForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Parametri IMPORTING:">
-        <ControlledTextarea
-          name="importsSection"
-          value={formData.importsSection}
-          onChange={handleChange}
-          rows={4}
-          placeholder="es. USERNAME = lv_username"
-        />
-      </FormGroup>
-      
-      <FormGroup label="Parametri EXPORTING:">
-        <ControlledTextarea
-          name="exportsSection"
-          value={formData.exportsSection}
-          onChange={handleChange}
-          rows={4}
-          placeholder="es. ADDRESS = ls_address"
-        />
-      </FormGroup>
-      
-      <FormGroup label="Parametri TABLES:">
-        <ControlledTextarea
-          name="tablesSection"
-          value={formData.tablesSection}
-          onChange={handleChange}
-          rows={4}
-          placeholder="es. PROFILES = lt_profiles"
-        />
-      </FormGroup>
+  <ControlledTextarea
+    name="importsSection"
+    value={formData.importsSection}
+    onChange={handleChange}
+    rows={4}
+    placeholder="Inserisci parametri di input"
+  />
+</FormGroup>
+
+<FormGroup label="Parametri EXPORTING:">
+  <ControlledTextarea
+    name="exportsSection"
+    value={formData.exportsSection}
+    onChange={handleChange}
+    rows={4}
+    placeholder="Inserisci parametri di output"
+  />
+</FormGroup>
+
+<FormGroup label="Parametri TABLES:">
+  <ControlledTextarea
+    name="tablesSection"
+    value={formData.tablesSection}
+    onChange={handleChange}
+    rows={4}
+    placeholder="Inserisci parametri tabella"
+  />
+</FormGroup>
       
       <FormGroup inline>
         <ControlledInput type="checkbox"

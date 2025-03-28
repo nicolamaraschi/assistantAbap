@@ -3,8 +3,6 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
-import ControlledInput from '../common/ControlledInput';
-import ControlledTextarea from '../common/ControlledTextarea';
 
 const WhileForm = ({ onGenerate }) => {
   // Stato locale del form
@@ -47,21 +45,27 @@ const WhileForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Condizione:">
-        <ControlledInput type="text"
-          name="condition"
-          value={formData.condition}
-          onChange={handleChange}
-          placeholder="es. lv_counter < 10"
-        />
+        <StyledInputContainer>
+          <StyledInput 
+            type="text"
+            name="condition"
+            value={formData.condition}
+            onChange={handleChange}
+          />
+          {!formData.condition && <PlaceholderText>es. lv_counter &lt; 10</PlaceholderText>}
+        </StyledInputContainer>
       </FormGroup>
       
       <FormGroup label="Contenuto del loop:">
-        <ControlledTextarea
-          name="content"
-          value={formData.content}
-          onChange={handleChange}
-          rows={5}
-        />
+        <StyledTextareaContainer>
+          <StyledTextarea
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+            rows={5}
+          />
+          {!formData.content && <PlaceholderText>Inserisci il contenuto del loop</PlaceholderText>}
+        </StyledTextareaContainer>
       </FormGroup>
       
       <ButtonContainer>
@@ -80,29 +84,63 @@ const WhileForm = ({ onGenerate }) => {
 // Stili del componente
 const FormContainer = styled.div`
   padding: 15px;
+`;
+
+const StyledInputContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Courier New', monospace;
+  background-color: transparent;
   
-  input[type="text"],
-  textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 15px;
-    transition: border-color 0.3s, box-shadow 0.3s;
-    font-family: 'Courier New', monospace;
-  }
-  
-  input[type="text"]:focus,
-  textarea:focus {
+  &:focus {
     outline: none;
     border-color: #0066cc;
     box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
   }
+`;
+
+const StyledTextareaContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const StyledTextarea = styled.textarea`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Courier New', monospace;
+  resize: vertical;
+  min-height: 80px;
+  background-color: transparent;
   
-  textarea {
-    resize: vertical;
-    min-height: 80px;
+  &:focus {
+    outline: none;
+    border-color: #0066cc;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
   }
+`;
+
+const PlaceholderText = styled.div`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #aaa;
+  pointer-events: none;
+  z-index: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
 `;
 
 const ButtonContainer = styled.div`

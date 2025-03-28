@@ -156,12 +156,13 @@ const AlvGridForm = ({ onGenerate }) => {
           </FormGroup>
           
           <FormGroup label="Titolo grid:">
-            <ControlledInput type="text"
-              name="grid_title"
-              value={formData.layout.grid_title}
-              onChange={handleLayoutChange}
-            />
-          </FormGroup>
+        <ControlledInput type="text"
+          name="grid_title"
+          value={formData.layout.grid_title}
+          onChange={handleLayoutChange}
+          placeholder="Inserisci titolo della grid"
+        />
+      </FormGroup>
         </LayoutOptions>
       </FormGroup>
       

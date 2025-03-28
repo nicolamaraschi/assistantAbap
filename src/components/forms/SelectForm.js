@@ -3,8 +3,6 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
-import ControlledInput from '../common/ControlledInput';
-import ControlledTextarea from '../common/ControlledTextarea';
 
 // Componente per il form SELECT
 const SelectForm = ({ onGenerate }) => {
@@ -57,71 +55,95 @@ const SelectForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Campi da selezionare:" tooltip="Specificare i campi separati da virgola, o * per tutti">
-        <ControlledInput type="text"
-          name="fields"
-          value={formData.fields}
-          onChange={handleChange}
-        />
+        <StyledInputContainer>
+          <StyledInput
+            type="text"
+            name="fields"
+            value={formData.fields}
+            onChange={handleChange}
+          />
+          {!formData.fields && <PlaceholderText>Inserisci i campi da selezionare</PlaceholderText>}
+        </StyledInputContainer>
       </FormGroup>
       
       <FormGroup label="Tabella:">
-        <ControlledInput type="text"
-          name="table"
-          value={formData.table}
-          onChange={handleChange}
-        />
+        <StyledInputContainer>
+          <StyledInput
+            type="text"
+            name="table"
+            value={formData.table}
+            onChange={handleChange}
+          />
+          {!formData.table && <PlaceholderText>Inserisci il nome della tabella</PlaceholderText>}
+        </StyledInputContainer>
       </FormGroup>
       
       <FormGroup label="INTO:">
-        <ControlledInput type="text"
-          name="into"
-          value={formData.into}
-          onChange={handleChange}
-          placeholder="es. TABLE lt_result o CORRESPONDING FIELDS OF TABLE lt_result"
-        />
+        <StyledInputContainer>
+          <StyledInput
+            type="text"
+            name="into"
+            value={formData.into}
+            onChange={handleChange}
+          />
+          {!formData.into && <PlaceholderText>es. TABLE lt_result o CORRESPONDING FIELDS OF TABLE lt_result</PlaceholderText>}
+        </StyledInputContainer>
       </FormGroup>
       
       <FormGroup label="WHERE (opzionale):">
-        <ControlledInput type="text"
-          name="where"
-          value={formData.where}
-          onChange={handleChange}
-          placeholder="es. id = '123'"
-        />
+        <StyledInputContainer>
+          <StyledInput
+            type="text"
+            name="where"
+            value={formData.where}
+            onChange={handleChange}
+          />
+          {!formData.where && <PlaceholderText>es. id = '123'</PlaceholderText>}
+        </StyledInputContainer>
       </FormGroup>
       
       <AdvancedSection>
         <SectionTitle>Opzioni avanzate</SectionTitle>
         
         <FormGroup label="ORDER BY (opzionale):">
-          <ControlledInput type="text"
-            name="orderBy"
-            value={formData.orderBy}
-            onChange={handleChange}
-            placeholder="es. created_at DESCENDING"
-          />
+          <StyledInputContainer>
+            <StyledInput
+              type="text"
+              name="orderBy"
+              value={formData.orderBy}
+              onChange={handleChange}
+            />
+            {!formData.orderBy && <PlaceholderText>es. created_at DESCENDING</PlaceholderText>}
+          </StyledInputContainer>
         </FormGroup>
         
         <FormGroup label="GROUP BY (opzionale):">
-          <ControlledInput type="text"
-            name="groupBy"
-            value={formData.groupBy}
-            onChange={handleChange}
-            placeholder="es. category"
-          />
+          <StyledInputContainer>
+            <StyledInput
+              type="text"
+              name="groupBy"
+              value={formData.groupBy}
+              onChange={handleChange}
+            />
+            {!formData.groupBy && <PlaceholderText>es. category</PlaceholderText>}
+          </StyledInputContainer>
         </FormGroup>
         
         <FormGroup label="HAVING (opzionale):">
-          <ControlledInput type="text"
-            name="having"
-            value={formData.having}
-            onChange={handleChange}
-            placeholder="es. COUNT(*) > 5"
-          />
+          <StyledInputContainer>
+            <StyledInput
+              type="text"
+              name="having"
+              value={formData.having}
+              onChange={handleChange}
+            />
+            {!formData.having && <PlaceholderText>es. COUNT(*) &gt; 5</PlaceholderText>}
+          </StyledInputContainer>
         </FormGroup>
         
         <FormGroup inline>
-          <ControlledInput type="checkbox"
+          <input
+            type="checkbox"
             name="addJoin"
             checked={formData.addJoin}
             onChange={handleChange}
@@ -145,20 +167,27 @@ const SelectForm = ({ onGenerate }) => {
             </FormGroup>
             
             <FormGroup label="Tabella JOIN:">
-              <ControlledInput type="text"
-                name="joinTable"
-                value={formData.joinTable}
-                onChange={handleChange}
-              />
+              <StyledInputContainer>
+                <StyledInput
+                  type="text"
+                  name="joinTable"
+                  value={formData.joinTable}
+                  onChange={handleChange}
+                />
+                {!formData.joinTable && <PlaceholderText>Inserisci la tabella da unire</PlaceholderText>}
+              </StyledInputContainer>
             </FormGroup>
             
             <FormGroup label="Condizione JOIN:">
-              <ControlledInput type="text"
-                name="joinCondition"
-                value={formData.joinCondition}
-                onChange={handleChange}
-                placeholder="es. table1~id = table2~id"
-              />
+              <StyledInputContainer>
+                <StyledInput
+                  type="text"
+                  name="joinCondition"
+                  value={formData.joinCondition}
+                  onChange={handleChange}
+                />
+                {!formData.joinCondition && <PlaceholderText>es. table1~id = table2~id</PlaceholderText>}
+              </StyledInputContainer>
             </FormGroup>
           </>
         )}
@@ -180,26 +209,39 @@ const SelectForm = ({ onGenerate }) => {
 // Stili del componente
 const FormContainer = styled.div`
   padding: 15px;
+`;
+
+const StyledInputContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Courier New', monospace;
+  background-color: transparent;
   
-  input[type="text"],
-  textarea,
-  select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 15px;
-    transition: border-color 0.3s, box-shadow 0.3s;
-    font-family: 'Courier New', monospace;
-  }
-  
-  input[type="text"]:focus,
-  textarea:focus,
-  select:focus {
+  &:focus {
     outline: none;
     border-color: #0066cc;
     box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
   }
+`;
+
+const PlaceholderText = styled.div`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #aaa;
+  pointer-events: none;
+  z-index: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
 `;
 
 const AdvancedSection = styled.div`

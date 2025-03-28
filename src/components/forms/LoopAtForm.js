@@ -3,8 +3,6 @@ import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
-import ControlledInput from '../common/ControlledInput';
-import ControlledTextarea from '../common/ControlledTextarea';
 
 // Componente per il form LOOP AT
 const LoopAtForm = ({ onGenerate }) => {
@@ -52,15 +50,20 @@ const LoopAtForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Tabella:">
-        <ControlledInput type="text"
-          name="table"
-          value={formData.table}
-          onChange={handleChange}
-        />
+        <StyledInputContainer>
+          <StyledInput
+            type="text"
+            name="table"
+            value={formData.table}
+            onChange={handleChange}
+          />
+          {!formData.table && <PlaceholderText>Inserisci il nome della tabella</PlaceholderText>}
+        </StyledInputContainer>
       </FormGroup>
       
       <FormGroup inline>
-        <ControlledInput type="checkbox"
+        <input
+          type="checkbox"
           name="useAssigning"
           checked={formData.useAssigning}
           onChange={handleChange}
@@ -70,24 +73,36 @@ const LoopAtForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label={formData.useAssigning ? "Nome Field-Symbol:" : "Variabile di destinazione:"}>
-        <ControlledInput type="text"
-          name="variable"
-          value={formData.variable}
-          onChange={handleChange}
-        />
+        <StyledInputContainer>
+          <StyledInput
+            type="text"
+            name="variable"
+            value={formData.variable}
+            onChange={handleChange}
+          />
+          {!formData.variable && (
+            <PlaceholderText>
+              {formData.useAssigning ? "Inserisci il nome del field-symbol" : "Inserisci il nome della variabile"}
+            </PlaceholderText>
+          )}
+        </StyledInputContainer>
       </FormGroup>
       
       <FormGroup label="Condizione WHERE (opzionale):">
-        <ControlledInput type="text"
-          name="whereCondition"
-          value={formData.whereCondition}
-          onChange={handleChange}
-          placeholder="es. field = 'value'"
-        />
+        <StyledInputContainer>
+          <StyledInput
+            type="text"
+            name="whereCondition"
+            value={formData.whereCondition}
+            onChange={handleChange}
+          />
+          {!formData.whereCondition && <PlaceholderText>es. field = 'value'</PlaceholderText>}
+        </StyledInputContainer>
       </FormGroup>
       
       <FormGroup inline>
-        <ControlledInput type="checkbox"
+        <input
+          type="checkbox"
           name="addIndex"
           checked={formData.addIndex}
           onChange={handleChange}
@@ -97,12 +112,15 @@ const LoopAtForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Contenuto del loop:">
-        <ControlledTextarea
-          name="content"
-          value={formData.content}
-          onChange={handleChange}
-          rows={5}
-        />
+        <StyledTextareaContainer>
+          <StyledTextarea
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+            rows={5}
+          />
+          {!formData.content && <PlaceholderText>Inserisci il contenuto del loop</PlaceholderText>}
+        </StyledTextareaContainer>
       </FormGroup>
       
       <ButtonContainer>
@@ -121,29 +139,63 @@ const LoopAtForm = ({ onGenerate }) => {
 // Stili del componente
 const FormContainer = styled.div`
   padding: 15px;
+`;
+
+const StyledInputContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const StyledInput = styled.input`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Courier New', monospace;
+  background-color: transparent;
   
-  input[type="text"],
-  textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 15px;
-    transition: border-color 0.3s, box-shadow 0.3s;
-    font-family: 'Courier New', monospace;
-  }
-  
-  input[type="text"]:focus,
-  textarea:focus {
+  &:focus {
     outline: none;
     border-color: #0066cc;
     box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
   }
+`;
+
+const StyledTextareaContainer = styled.div`
+  position: relative;
+  width: 100%;
+`;
+
+const StyledTextarea = styled.textarea`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 15px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Courier New', monospace;
+  resize: vertical;
+  min-height: 80px;
+  background-color: transparent;
   
-  textarea {
-    resize: vertical;
-    min-height: 80px;
+  &:focus {
+    outline: none;
+    border-color: #0066cc;
+    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
   }
+`;
+
+const PlaceholderText = styled.div`
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #aaa;
+  pointer-events: none;
+  z-index: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
 `;
 
 const ButtonContainer = styled.div`

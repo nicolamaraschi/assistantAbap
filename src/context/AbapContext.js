@@ -32,39 +32,34 @@ export const AbapProvider = ({ children }) => {
   // Usa useRef invece di useState per lo stato del form per evitare rirender
   const formStateRef = useRef({});
   
-  // Carica lo stato iniziale dal localStorage
-  const savedFormState = useRef(false);
-  if (!savedFormState.current) {
-    try {
-      const saved = localStorage.getItem('abap-form-state');
-      if (saved) {
-        formStateRef.current = JSON.parse(saved);
-      }
-    } catch (e) {
-      console.error('Errore durante il caricamento dello stato dei form:', e);
-    }
-    savedFormState.current = true;
-  }
+  // *** RIMUOVIAMO COMPLETAMENTE IL CARICAMENTO DELLO STATO DAI LOCALSTORAGE ***
+  // La persistenza è completamente disabilitata
   
   // Funzione per aggiornare lo stato del form senza causare rirender
   const updateFormState = (constructType, newState) => {
-    // Aggiorna lo stato nella ref
+    // Aggiorna solo lo stato nella ref, SENZA salvare in localStorage
     formStateRef.current = {
       ...formStateRef.current,
       [constructType]: newState
     };
     
-    // Salva nel localStorage senza causare rirender
-    try {
-      localStorage.setItem('abap-form-state', JSON.stringify(formStateRef.current));
-    } catch (e) {
-      console.error('Errore durante il salvataggio dello stato dei form:', e);
-    }
+    // NON salvare in localStorage - rimuoviamo questa parte
   };
   
   // Funzione per leggere lo stato di un form specifico
   const getFormState = (constructType) => {
     return formStateRef.current[constructType] || null;
+  };
+  
+  // Funzione per resettare lo stato del form di un tipo specifico
+  const resetFormState = (constructType) => {
+    // Crea un nuovo stato vuoto
+    formStateRef.current = {
+      ...formStateRef.current,
+      [constructType]: {}
+    };
+    
+    return {};
   };
   
   // Aggiungi un preferito
@@ -124,6 +119,7 @@ export const AbapProvider = ({ children }) => {
     setActiveTab,
     getFormState,
     updateFormState,
+    resetFormState,
     formState: formStateRef.current // Esponi lo stato attuale come oggetto non reattivo
   };
 
