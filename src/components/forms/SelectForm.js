@@ -1,10 +1,12 @@
+// SelectForm.js - Migliorato con UNION e FOR ALL ENTRIES
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
-// Componente per il form SELECT
 const SelectForm = ({ onGenerate }) => {
   // Stato locale del form
   const [formData, setFormData] = useState({
@@ -18,7 +20,13 @@ const SelectForm = ({ onGenerate }) => {
     addJoin: false,
     joinType: 'INNER JOIN',
     joinTable: 'ztable2',
-    joinCondition: 'ztable~id = ztable2~id'
+    joinCondition: 'ztable~id = ztable2~id',
+    useUnion: false,         // Nuovo campo
+    unionType: 'UNION ALL',  // Nuovo campo
+    unionSelect: 'SELECT field1, field2\n  FROM ztable2\n  WHERE field2 = \'value\'', // Nuovo campo
+    useForAllEntries: false, // Nuovo campo
+    forAllEntriesTable: 'lt_keys', // Nuovo campo
+    forAllEntriesWhere: 'ztable~id = lt_keys-id' // Nuovo campo
   });
   
   // Accesso al context
@@ -55,102 +63,47 @@ const SelectForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Campi da selezionare:" tooltip="Specificare i campi separati da virgola, o * per tutti">
-        <StyledInputContainer>
-          <StyledInput
-            type="text"
-            name="fields"
-            value={formData.fields}
-            onChange={handleChange}
-          />
-          {!formData.fields && <PlaceholderText>Inserisci i campi da selezionare</PlaceholderText>}
-        </StyledInputContainer>
+        <ControlledInput
+          type="text"
+          name="fields"
+          value={formData.fields}
+          onChange={handleChange}
+        />
       </FormGroup>
       
       <FormGroup label="Tabella:">
-        <StyledInputContainer>
-          <StyledInput
-            type="text"
-            name="table"
-            value={formData.table}
-            onChange={handleChange}
-          />
-          {!formData.table && <PlaceholderText>Inserisci il nome della tabella</PlaceholderText>}
-        </StyledInputContainer>
+        <ControlledInput
+          type="text"
+          name="table"
+          value={formData.table}
+          onChange={handleChange}
+        />
       </FormGroup>
       
-      <FormGroup label="INTO:">
-        <StyledInputContainer>
-          <StyledInput
-            type="text"
-            name="into"
-            value={formData.into}
-            onChange={handleChange}
-          />
-          {!formData.into && <PlaceholderText>es. TABLE lt_result o CORRESPONDING FIELDS OF TABLE lt_result</PlaceholderText>}
-        </StyledInputContainer>
-      </FormGroup>
-      
-      <FormGroup label="WHERE (opzionale):">
-        <StyledInputContainer>
-          <StyledInput
-            type="text"
-            name="where"
-            value={formData.where}
-            onChange={handleChange}
-          />
-          {!formData.where && <PlaceholderText>es. id = '123'</PlaceholderText>}
-        </StyledInputContainer>
-      </FormGroup>
-      
-      <AdvancedSection>
-        <SectionTitle>Opzioni avanzate</SectionTitle>
-        
-        <FormGroup label="ORDER BY (opzionale):">
-          <StyledInputContainer>
-            <StyledInput
-              type="text"
-              name="orderBy"
-              value={formData.orderBy}
-              onChange={handleChange}
-            />
-            {!formData.orderBy && <PlaceholderText>es. created_at DESCENDING</PlaceholderText>}
-          </StyledInputContainer>
-        </FormGroup>
-        
-        <FormGroup label="GROUP BY (opzionale):">
-          <StyledInputContainer>
-            <StyledInput
-              type="text"
-              name="groupBy"
-              value={formData.groupBy}
-              onChange={handleChange}
-            />
-            {!formData.groupBy && <PlaceholderText>es. category</PlaceholderText>}
-          </StyledInputContainer>
-        </FormGroup>
-        
-        <FormGroup label="HAVING (opzionale):">
-          <StyledInputContainer>
-            <StyledInput
-              type="text"
-              name="having"
-              value={formData.having}
-              onChange={handleChange}
-            />
-            {!formData.having && <PlaceholderText>es. COUNT(*) &gt; 5</PlaceholderText>}
-          </StyledInputContainer>
-        </FormGroup>
-        
-        <FormGroup inline>
-          <input
-            type="checkbox"
-            name="addJoin"
-            checked={formData.addJoin}
-            onChange={handleChange}
-            id="addJoin"
-          />
-          <label htmlFor="addJoin">Aggiungi JOIN</label>
-        </FormGroup>
+      <SelectOptions>
+        <OptionTabs>
+          <OptionTab active={!formData.addJoin && !formData.useForAllEntries} onClick={() => setFormData({
+            ...formData,
+            addJoin: false,
+            useForAllEntries: false
+          })}>
+            Select Standard
+          </OptionTab>
+          <OptionTab active={formData.addJoin} onClick={() => setFormData({
+            ...formData,
+            addJoin: true,
+            useForAllEntries: false
+          })}>
+            Join
+          </OptionTab>
+          <OptionTab active={formData.useForAllEntries} onClick={() => setFormData({
+            ...formData,
+            addJoin: false,
+            useForAllEntries: true
+          })}>
+            For All Entries
+          </OptionTab>
+        </OptionTabs>
         
         {formData.addJoin && (
           <>
@@ -167,31 +120,137 @@ const SelectForm = ({ onGenerate }) => {
             </FormGroup>
             
             <FormGroup label="Tabella JOIN:">
-              <StyledInputContainer>
-                <StyledInput
-                  type="text"
-                  name="joinTable"
-                  value={formData.joinTable}
-                  onChange={handleChange}
-                />
-                {!formData.joinTable && <PlaceholderText>Inserisci la tabella da unire</PlaceholderText>}
-              </StyledInputContainer>
+              <ControlledInput
+                type="text"
+                name="joinTable"
+                value={formData.joinTable}
+                onChange={handleChange}
+              />
             </FormGroup>
             
             <FormGroup label="Condizione JOIN:">
-              <StyledInputContainer>
-                <StyledInput
-                  type="text"
-                  name="joinCondition"
-                  value={formData.joinCondition}
-                  onChange={handleChange}
-                />
-                {!formData.joinCondition && <PlaceholderText>es. table1~id = table2~id</PlaceholderText>}
-              </StyledInputContainer>
+              <ControlledInput
+                type="text"
+                name="joinCondition"
+                value={formData.joinCondition}
+                onChange={handleChange}
+              />
             </FormGroup>
           </>
         )}
-      </AdvancedSection>
+        
+        {formData.useForAllEntries && (
+          <>
+            <FormGroup label="Tabella FOR ALL ENTRIES:">
+              <ControlledInput
+                type="text"
+                name="forAllEntriesTable"
+                value={formData.forAllEntriesTable}
+                onChange={handleChange}
+              />
+            </FormGroup>
+            
+            <FormGroup label="Condizione FOR ALL ENTRIES:">
+              <ControlledInput
+                type="text"
+                name="forAllEntriesWhere"
+                value={formData.forAllEntriesWhere}
+                onChange={handleChange}
+              />
+            </FormGroup>
+          </>
+        )}
+      </SelectOptions>
+      
+      <FormGroup label="INTO:">
+        <ControlledInput
+          type="text"
+          name="into"
+          value={formData.into}
+          onChange={handleChange}
+        />
+      </FormGroup>
+      
+      {!formData.useForAllEntries && (
+        <FormGroup label="WHERE (opzionale):">
+          <ControlledInput
+            type="text"
+            name="where"
+            value={formData.where}
+            onChange={handleChange}
+          />
+        </FormGroup>
+      )}
+      
+      <AdvancedOptions>
+        <h4>Opzioni Avanzate</h4>
+        
+        <AdvancedSection>
+          <FormGroup label="ORDER BY (opzionale):">
+            <ControlledInput
+              type="text"
+              name="orderBy"
+              value={formData.orderBy}
+              onChange={handleChange}
+            />
+          </FormGroup>
+          
+          <FormGroup label="GROUP BY (opzionale):">
+            <ControlledInput
+              type="text"
+              name="groupBy"
+              value={formData.groupBy}
+              onChange={handleChange}
+            />
+          </FormGroup>
+          
+          <FormGroup label="HAVING (opzionale):">
+            <ControlledInput
+              type="text"
+              name="having"
+              value={formData.having}
+              onChange={handleChange}
+            />
+          </FormGroup>
+        </AdvancedSection>
+        
+        <AdvancedSection>
+          <FormGroup inline>
+            <input
+              type="checkbox"
+              name="useUnion"
+              checked={formData.useUnion}
+              onChange={handleChange}
+              id="useUnion"
+            />
+            <label htmlFor="useUnion">Aggiungi UNION</label>
+          </FormGroup>
+          
+          {formData.useUnion && (
+            <>
+              <FormGroup label="Tipo di UNION:">
+                <select
+                  name="unionType"
+                  value={formData.unionType}
+                  onChange={handleChange}
+                >
+                  <option value="UNION">UNION</option>
+                  <option value="UNION ALL">UNION ALL</option>
+                </select>
+              </FormGroup>
+              
+              <FormGroup label="SELECT UNION:">
+                <ControlledTextarea
+                  name="unionSelect"
+                  value={formData.unionSelect}
+                  onChange={handleChange}
+                  rows={5}
+                />
+              </FormGroup>
+            </>
+          )}
+        </AdvancedSection>
+      </AdvancedOptions>
       
       <ButtonContainer>
         <Button 
@@ -211,52 +270,52 @@ const FormContainer = styled.div`
   padding: 15px;
 `;
 
-const StyledInputContainer = styled.div`
-  position: relative;
-  width: 100%;
+const SelectOptions = styled.div`
+  margin-bottom: 15px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 15px;
 `;
 
-const StyledInput = styled.input`
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 15px;
-  transition: border-color 0.3s, box-shadow 0.3s;
-  font-family: 'Courier New', monospace;
-  background-color: transparent;
+const OptionTabs = styled.div`
+  display: flex;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #ddd;
+`;
+
+const OptionTab = styled.div`
+  padding: 8px 16px;
+  cursor: pointer;
+  border-bottom: 2px solid ${props => props.active ? '#0066cc' : 'transparent'};
+  color: ${props => props.active ? '#0066cc' : '#333'};
+  font-weight: ${props => props.active ? 'bold' : 'normal'};
   
-  &:focus {
-    outline: none;
-    border-color: #0066cc;
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+  &:hover {
+    background-color: #f9f9f9;
   }
 `;
 
-const PlaceholderText = styled.div`
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  color: #aaa;
-  pointer-events: none;
-  z-index: 1;
-  font-family: 'Courier New', monospace;
-  font-size: 15px;
+const AdvancedOptions = styled.div`
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+  
+  h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #333;
+  }
 `;
 
 const AdvancedSection = styled.div`
-  margin-top: 20px;
-  padding: 15px;
-  background: #f9f9f9;
-  border-radius: 8px;
+  background: #fff;
   border: 1px solid #eee;
-`;
-
-const SectionTitle = styled.h4`
-  margin-top: 0;
-  margin-bottom: 15px;
-  font-size: 16px;
-  color: #333;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 12px;
 `;
 
 const ButtonContainer = styled.div`

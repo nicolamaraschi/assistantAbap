@@ -1,3 +1,4 @@
+// TryCatchForm.js - Migliorato con supporto RESUME
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
@@ -12,11 +13,12 @@ const TryCatchForm = ({ onGenerate }) => {
   const [formData, setFormData] = useState({
     tryBlock: 'DATA(lv_result) = cl_some_class=>method( ).',
     catchBlocks: [
-      { id: 1, className: 'cx_sy_zerodivide', content: 'WRITE: / \'Divisione per zero\'.' }
+      { id: 1, className: 'cx_sy_zerodivide', content: 'WRITE: / \'Divisione per zero\'.', useResume: false }
     ],
     cleanup: '',
     addCleanup: false,
-    multipleExceptions: false
+    multipleExceptions: false,
+    useResume: false // Nuovo campo
   });
   
   // Accesso al context
@@ -48,7 +50,7 @@ const TryCatchForm = ({ onGenerate }) => {
     setFormData({
       ...formData,
       catchBlocks: formData.catchBlocks.map(c => 
-        c.id === id ? { ...c, [field]: value } : c
+        c.id === id ? { ...c, [field]: field === 'useResume' ? !c.useResume : value } : c
       )
     });
   };
@@ -60,7 +62,7 @@ const TryCatchForm = ({ onGenerate }) => {
       ...formData,
       catchBlocks: [
         ...formData.catchBlocks,
-        { id: newId, className: 'cx_root', content: 'WRITE: / \'Errore generico\'.' }
+        { id: newId, className: 'cx_root', content: 'WRITE: / \'Errore generico\'.', useResume: false }
       ]
     });
   };
@@ -92,13 +94,25 @@ const TryCatchForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup inline>
-        <ControlledInput type="checkbox"
+        <input
+          type="checkbox"
           name="multipleExceptions"
           checked={formData.multipleExceptions}
           onChange={handleChange}
           id="multipleExceptions"
         />
         <label htmlFor="multipleExceptions">Gestisci eccezioni multiple</label>
+      </FormGroup>
+      
+      <FormGroup inline>
+        <input
+          type="checkbox"
+          name="useResume"
+          checked={formData.useResume}
+          onChange={handleChange}
+          id="useResume"
+        />
+        <label htmlFor="useResume">Abilita opzione RESUME</label>
       </FormGroup>
       
       {formData.multipleExceptions ? (
@@ -116,7 +130,8 @@ const TryCatchForm = ({ onGenerate }) => {
                 />
               </CatchHeader>
               <FormGroup label="Classe eccezione:">
-                <ControlledInput type="text"
+                <ControlledInput
+                  type="text"
                   value={catchBlock.className}
                   onChange={(e) => handleCatchChange(catchBlock.id, 'className', e.target.value)}
                 />
@@ -128,6 +143,17 @@ const TryCatchForm = ({ onGenerate }) => {
                   rows={3}
                 />
               </FormGroup>
+              {formData.useResume && (
+                <FormGroup inline>
+                  <input
+                    type="checkbox"
+                    checked={catchBlock.useResume}
+                    onChange={() => handleCatchChange(catchBlock.id, 'useResume')}
+                    id={`useResume-${catchBlock.id}`}
+                  />
+                  <label htmlFor={`useResume-${catchBlock.id}`}>Usa RESUME dopo questo catch</label>
+                </FormGroup>
+              )}
             </CatchItem>
           ))}
           
@@ -143,7 +169,8 @@ const TryCatchForm = ({ onGenerate }) => {
       ) : (
         <>
           <FormGroup label="Classe eccezione:">
-            <ControlledInput type="text"
+            <ControlledInput
+              type="text"
               value={formData.catchBlocks[0].className}
               onChange={(e) => handleCatchChange(formData.catchBlocks[0].id, 'className', e.target.value)}
             />
@@ -155,11 +182,23 @@ const TryCatchForm = ({ onGenerate }) => {
               rows={4}
             />
           </FormGroup>
+          {formData.useResume && (
+            <FormGroup inline>
+              <input
+                type="checkbox"
+                checked={formData.catchBlocks[0].useResume}
+                onChange={() => handleCatchChange(formData.catchBlocks[0].id, 'useResume')}
+                id="useResume-single"
+              />
+              <label htmlFor="useResume-single">Usa RESUME dopo questo catch</label>
+            </FormGroup>
+          )}
         </>
       )}
       
       <FormGroup inline>
-        <ControlledInput type="checkbox"
+        <input
+          type="checkbox"
           name="addCleanup"
           checked={formData.addCleanup}
           onChange={handleChange}

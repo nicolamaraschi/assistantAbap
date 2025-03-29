@@ -1,3 +1,4 @@
+// ClassForm.js - Migliorato con EVENTS e opzione Singleton
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
@@ -21,8 +22,14 @@ const ClassForm = ({ onGenerate }) => {
     methods: [
       { id: 1, name: 'constructor', importing: '', exporting: '', returning: null }
     ],
-    finalClass: false
+    finalClass: false,
+    events: [], // Nuovo campo per gli eventi
+    generateGetSet: false, // Nuovo campo
+    isSingleton: false // Nuovo campo
   });
+  
+  // Stato per la visualizzazione delle diverse sezioni
+  const [activeSection, setActiveSection] = useState('attributes');
   
   // Accesso al context
   const { updateFormState, formState } = useAbap();
@@ -33,7 +40,6 @@ const ClassForm = ({ onGenerate }) => {
       setFormData(formState['class']);
     }
   }, [formState]);
-  
   // Salva lo stato nel contesto quando cambia
   useEffect(() => {
     updateFormState('class', formData);
@@ -95,7 +101,7 @@ const ClassForm = ({ onGenerate }) => {
       ...formData,
       methods: [
         ...formData.methods,
-        { id: newId, name: `method${newId}`, importing: '', exporting: '', returning: null }
+        { id: newId, name: `method${newId}`, importing: '', exporting: '', returning: null, visibility: 'PUBLIC' }
       ]
     });
   };
@@ -105,6 +111,36 @@ const ClassForm = ({ onGenerate }) => {
     setFormData({
       ...formData,
       methods: formData.methods.filter(m => m.id !== id)
+    });
+  };
+  
+  // Gestisce il cambiamento degli eventi
+  const handleEventChange = (id, field, value) => {
+    setFormData({
+      ...formData,
+      events: formData.events.map(e => 
+        e.id === id ? { ...e, [field]: value } : e
+      )
+    });
+  };
+  
+  // Aggiunge un nuovo evento
+  const handleAddEvent = () => {
+    const newId = Math.max(0, ...(formData.events || []).map(e => e.id), 0) + 1;
+    setFormData({
+      ...formData,
+      events: [
+        ...(formData.events || []),
+        { id: newId, name: `event${newId}`, paramName: 'rv_data', paramType: 'STRING' }
+      ]
+    });
+  };
+  
+  // Rimuove un evento
+  const handleRemoveEvent = (id) => {
+    setFormData({
+      ...formData,
+      events: formData.events.filter(e => e.id !== id)
     });
   };
   
@@ -157,107 +193,205 @@ const ClassForm = ({ onGenerate }) => {
         />
       </FormGroup>
       
+      <AdvancedOptions>
+        <h4>Opzioni Avanzate</h4>
+        
+        <FormGroup inline>
+          <input
+            type="checkbox"
+            name="isSingleton"
+            checked={formData.isSingleton}
+            onChange={handleChange}
+            id="isSingleton"
+          />
+          <label htmlFor="isSingleton">Classe Singleton (con GET_INSTANCE)</label>
+        </FormGroup>
+        
+        <FormGroup inline>
+          <input
+            type="checkbox"
+            name="generateGetSet"
+            checked={formData.generateGetSet}
+            onChange={handleChange}
+            id="generateGetSet"
+          />
+          <label htmlFor="generateGetSet">Genera metodi getter/setter per attributi pubblici</label>
+        </FormGroup>
+      </AdvancedOptions>
+      
       <TabsContainer>
         <TabHeader>
-          <TabButton active={true}>Attributi</TabButton>
-          <TabButton>Metodi</TabButton>
+          <TabButton active={activeSection === 'attributes'} onClick={() => setActiveSection('attributes')}>
+            Attributi
+          </TabButton>
+          <TabButton active={activeSection === 'methods'} onClick={() => setActiveSection('methods')}>
+            Metodi
+          </TabButton>
+          <TabButton active={activeSection === 'events'} onClick={() => setActiveSection('events')}>
+            Eventi
+          </TabButton>
         </TabHeader>
         
         <TabContent>
-          <FormGroup label="Attributi:">
-            {formData.attributes.map(attribute => (
-              <AttributeItem key={attribute.id}>
-                <AttributeHeader>
-                  <AttributeTitle>Attributo {attribute.id}</AttributeTitle>
-                  <Button
-                    variant="text"
-                    size="small"
-                    icon={<FiTrash2 />}
-                    onClick={() => handleRemoveAttribute(attribute.id)}
-                  />
-                </AttributeHeader>
-                <FormGroup label="Nome:">
-                  <ControlledInput type="text"
-                    value={attribute.name}
-                    onChange={(e) => handleAttributeChange(attribute.id, 'name', e.target.value)}
-                  />
-                </FormGroup>
-                <FormGroup label="Tipo:">
-                  <ControlledInput type="text"
-                    value={attribute.type}
-                    onChange={(e) => handleAttributeChange(attribute.id, 'type', e.target.value)}
-                  />
-                </FormGroup>
-                <FormGroup label="Visibilità:">
-                  <select
-                    value={attribute.visibility}
-                    onChange={(e) => handleAttributeChange(attribute.id, 'visibility', e.target.value)}
-                  >
-                    <option value="PUBLIC">PUBLIC</option>
-                    <option value="PROTECTED">PROTECTED</option>
-                    <option value="PRIVATE">PRIVATE</option>
-                  </select>
-                </FormGroup>
-              </AttributeItem>
-            ))}
-            
-            <Button
-              variant="outline"
-              size="small"
-              icon={<FiPlus />}
-              onClick={handleAddAttribute}
-            >
-              Aggiungi attributo
-            </Button>
-          </FormGroup>
+          {activeSection === 'attributes' && (
+            <FormGroup label="Attributi:">
+              {formData.attributes.map(attribute => (
+                <AttributeItem key={attribute.id}>
+                  <AttributeHeader>
+                    <AttributeTitle>Attributo {attribute.id}</AttributeTitle>
+                    <Button
+                      variant="text"
+                      size="small"
+                      icon={<FiTrash2 />}
+                      onClick={() => handleRemoveAttribute(attribute.id)}
+                    />
+                  </AttributeHeader>
+                  <FormGroup label="Nome:">
+                    <ControlledInput type="text"
+                      value={attribute.name}
+                      onChange={(e) => handleAttributeChange(attribute.id, 'name', e.target.value)}
+                    />
+                  </FormGroup>
+                  <FormGroup label="Tipo:">
+                    <ControlledInput type="text"
+                      value={attribute.type}
+                      onChange={(e) => handleAttributeChange(attribute.id, 'type', e.target.value)}
+                    />
+                  </FormGroup>
+                  <FormGroup label="Visibilità:">
+                    <select
+                      value={attribute.visibility}
+                      onChange={(e) => handleAttributeChange(attribute.id, 'visibility', e.target.value)}
+                    >
+                      <option value="PUBLIC">PUBLIC</option>
+                      <option value="PROTECTED">PROTECTED</option>
+                      <option value="PRIVATE">PRIVATE</option>
+                    </select>
+                  </FormGroup>
+                </AttributeItem>
+              ))}
+              
+              <Button
+                variant="outline"
+                size="small"
+                icon={<FiPlus />}
+                onClick={handleAddAttribute}
+              >
+                Aggiungi attributo
+              </Button>
+            </FormGroup>
+          )}
           
-          <FormGroup label="Metodi:">
-            {formData.methods.map(method => (
-              <MethodItem key={method.id}>
-                <MethodHeader>
-                  <MethodTitle>Metodo {method.id}</MethodTitle>
-                  <Button
-                    variant="text"
-                    size="small"
-                    icon={<FiTrash2 />}
-                    onClick={() => handleRemoveMethod(method.id)}
-                    disabled={method.name === 'constructor' && formData.methods.length === 1}
-                  />
-                </MethodHeader>
-                <FormGroup label="Nome:">
-                  <ControlledInput type="text"
-                    value={method.name}
-                    onChange={(e) => handleMethodChange(method.id, 'name', e.target.value)}
-                  />
-                </FormGroup>
-                <FormGroup label="Parametri IMPORTING (opzionale):">
-                  <ControlledTextarea
-                    value={method.importing}
-                    onChange={(e) => handleMethodChange(method.id, 'importing', e.target.value)}
-                    rows={2}
-                    placeholder="es. iv_param1 TYPE string"
-                  />
-                </FormGroup>
-                <FormGroup label="Parametri EXPORTING (opzionale):">
-                  <ControlledTextarea
-                    value={method.exporting}
-                    onChange={(e) => handleMethodChange(method.id, 'exporting', e.target.value)}
-                    rows={2}
-                    placeholder="es. ev_result TYPE string"
-                  />
-                </FormGroup>
-              </MethodItem>
-            ))}
-            
-            <Button
-              variant="outline"
-              size="small"
-              icon={<FiPlus />}
-              onClick={handleAddMethod}
-            >
-              Aggiungi metodo
-            </Button>
-          </FormGroup>
+          {activeSection === 'methods' && (
+            <FormGroup label="Metodi:">
+              {formData.methods.map(method => (
+                <MethodItem key={method.id}>
+                  <MethodHeader>
+                    <MethodTitle>Metodo {method.id}</MethodTitle>
+                    <Button
+                      variant="text"
+                      size="small"
+                      icon={<FiTrash2 />}
+                      onClick={() => handleRemoveMethod(method.id)}
+                      disabled={method.name === 'constructor' && formData.methods.length === 1}
+                    />
+                  </MethodHeader>
+                  <FormGroup label="Nome:">
+                    <ControlledInput type="text"
+                      value={method.name}
+                      onChange={(e) => handleMethodChange(method.id, 'name', e.target.value)}
+                    />
+                  </FormGroup>
+                  <FormGroup label="Visibilità:">
+                    <select
+                      value={method.visibility || 'PUBLIC'}
+                      onChange={(e) => handleMethodChange(method.id, 'visibility', e.target.value)}
+                    >
+                      <option value="PUBLIC">PUBLIC</option>
+                      <option value="PROTECTED">PROTECTED</option>
+                      <option value="PRIVATE">PRIVATE</option>
+                    </select>
+                  </FormGroup>
+                  <FormGroup label="Parametri IMPORTING (opzionale):">
+                    <ControlledTextarea
+                      value={method.importing}
+                      onChange={(e) => handleMethodChange(method.id, 'importing', e.target.value)}
+                      rows={2}
+                      placeholder="es. iv_param1 TYPE string"
+                    />
+                  </FormGroup>
+                  <FormGroup label="Parametri EXPORTING (opzionale):">
+                    <ControlledTextarea
+                      value={method.exporting}
+                      onChange={(e) => handleMethodChange(method.id, 'exporting', e.target.value)}
+                      rows={2}
+                      placeholder="es. ev_result TYPE string"
+                    />
+                  </FormGroup>
+                </MethodItem>
+              ))}
+              
+              <Button
+                variant="outline"
+                size="small"
+                icon={<FiPlus />}
+                onClick={handleAddMethod}
+              >
+                Aggiungi metodo
+              </Button>
+            </FormGroup>
+          )}
+          
+          {activeSection === 'events' && (
+            <FormGroup label="Eventi:">
+              {formData.events && formData.events.length > 0 ? (
+                formData.events.map(event => (
+                  <EventItem key={event.id}>
+                    <EventHeader>
+                      <EventTitle>Evento {event.id}</EventTitle>
+                      <Button
+                        variant="text"
+                        size="small"
+                        icon={<FiTrash2 />}
+                        onClick={() => handleRemoveEvent(event.id)}
+                      />
+                    </EventHeader>
+                    <FormGroup label="Nome evento:">
+                      <ControlledInput type="text"
+                        value={event.name}
+                        onChange={(e) => handleEventChange(event.id, 'name', e.target.value)}
+                      />
+                    </FormGroup>
+                    <FormGroup label="Parametro (nome):">
+                      <ControlledInput type="text"
+                        value={event.paramName}
+                        onChange={(e) => handleEventChange(event.id, 'paramName', e.target.value)}
+                      />
+                    </FormGroup>
+                    <FormGroup label="Parametro (tipo):">
+                      <ControlledInput type="text"
+                        value={event.paramType}
+                        onChange={(e) => handleEventChange(event.id, 'paramType', e.target.value)}
+                      />
+                    </FormGroup>
+                  </EventItem>
+                ))
+              ) : (
+                <EmptyState>
+                  Nessun evento definito. Aggiungi un evento per includere la dichiarazione EVENTS nella classe.
+                </EmptyState>
+              )}
+              
+              <Button
+                variant="outline"
+                size="small"
+                icon={<FiPlus />}
+                onClick={handleAddEvent}
+              >
+                Aggiungi evento
+              </Button>
+            </FormGroup>
+          )}
         </TabContent>
       </TabsContainer>
       
@@ -301,6 +435,22 @@ const FormContainer = styled.div`
   textarea {
     resize: vertical;
     min-height: 50px;
+  }
+`;
+
+const AdvancedOptions = styled.div`
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+  margin-top: 15px;
+  
+  h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #333;
   }
 `;
 
@@ -380,6 +530,38 @@ const MethodHeader = styled.div`
 const MethodTitle = styled.div`
   font-weight: bold;
   color: #444;
+`;
+
+const EventItem = styled.div`
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+`;
+
+const EventHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+`;
+
+const EventTitle = styled.div`
+  font-weight: bold;
+  color: #444;
+`;
+
+const EmptyState = styled.div`
+  background: #f0f4f8;
+  padding: 15px;
+  border-radius: 4px;
+  text-align: center;
+  margin-bottom: 15px;
+  color: #666;
+  font-style: italic;
 `;
 
 const ButtonContainer = styled.div`

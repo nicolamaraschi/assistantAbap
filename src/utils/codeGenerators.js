@@ -13,76 +13,119 @@ export const generateGeneric = (formData) => {
   };
   
   // IF-ELSE
-  export const generateIfElse = (formData) => {
-    const { condition, trueAction, falseAction, addElseIf, elseIfCondition, elseIfAction } = formData;
-    
-    let code = `IF ${condition}.
-    ${trueAction}`;
-    
-    if (addElseIf) {
-      code += `
-  ELSEIF ${elseIfCondition}.
-    ${elseIfAction}`;
-    }
-    
-    code += `
-  ELSE.
-    ${falseAction}
-  ENDIF.`;
-    
-    return code;
-  };
+  // IF-ELSE migliorato con supporto multi-ELSEIF
+export const generateIfElse = (formData) => {
+  const { 
+    condition, 
+    trueAction, 
+    falseAction, 
+    addElseIf, 
+    elseIfConditions = [], // Supporto per multipli blocchi ELSEIF
+    elseIfCondition,       // Per retrocompatibilità
+    elseIfAction           // Per retrocompatibilità
+  } = formData;
   
-  // CASE
-  export const generateCase = (formData) => {
-    const { variable, cases, defaultAction } = formData;
-    
-    let code = `CASE ${variable}.`;
-    
-    for (const caseItem of cases) {
-      code += `
-    WHEN ${caseItem.value}.
-      ${caseItem.action}`;
-    }
-    
-    if (defaultAction) {
-      code += `
-    WHEN OTHERS.
-      ${defaultAction}`;
-    }
-    
-    code += `
-  ENDCASE.`;
-    
-    return code;
-  };
+  let code = `IF ${condition}.
+  ${trueAction}`;
   
-  // LOOP AT
-  export const generateLoopAt = (formData) => {
-    const { table, variable, whereCondition, content, useAssigning, addIndex } = formData;
-    
-    let code = `LOOP AT ${table}`;
-    
-    if (useAssigning) {
-      code += ` ASSIGNING FIELD-SYMBOL(<${variable}>)`;
-    } else {
-      code += ` INTO ${variable}`;
+  // Gestisce sia il vecchio formato che il nuovo formato multi-ELSEIF
+  if (addElseIf) {
+    if (elseIfConditions.length > 0) {
+      // Nuovo formato: array di condizioni multiple
+      elseIfConditions.forEach(elseIf => {
+        code += `
+ELSEIF ${elseIf.condition}.
+  ${elseIf.action}`;
+      });
+    } else if (elseIfCondition) {
+      // Vecchio formato: singolo ELSEIF
+      code += `
+ELSEIF ${elseIfCondition}.
+  ${elseIfAction}`;
     }
-    
-    if (whereCondition) {
-      code += ` WHERE ${whereCondition}`;
-    }
-    
-    if (addIndex) {
-      code += ` ASSIGNING FIELD-SYMBOL(<fs>) FROM 1 TO 10`;
-    }
-    
-    code += `.
-    ${content}
-  ENDLOOP.`;
-    
-    return code;
-  };
+  }
+  
+  code += `
+ELSE.
+  ${falseAction}
+ENDIF.`;
+  
+  return code;
+};
+  
+  // CASE migliorato
+export const generateCase = (formData) => {
+  const { variable, cases, defaultAction } = formData;
+  
+  let code = `CASE ${variable}.`;
+  
+  for (const caseItem of cases) {
+    code += `
+  WHEN ${caseItem.value}.
+    ${caseItem.action}`;
+  }
+  
+  if (defaultAction) {
+    code += `
+  WHEN OTHERS.
+    ${defaultAction}`;
+  }
+  
+  code += `
+ENDCASE.`;
+  
+  return code;
+};
+  
+ // LOOP AT migliorato con GROUP BY e REFERENCE INTO
+export const generateLoopAt = (formData) => {
+  const { 
+    table, 
+    variable, 
+    whereCondition, 
+    content, 
+    useAssigning, 
+    addIndex,
+    useGroupBy = false,       // Nuovo parametro
+    groupByField = '',        // Nuovo parametro
+    groupByOrder = 'ASCENDING', // Nuovo parametro
+    useReferenceInto = false,  // Nuovo parametro
+    indexFrom = 1,             // Nuovo parametro
+    indexTo = 10               // Nuovo parametro
+  } = formData;
+  
+  let code = `LOOP AT ${table}`;
+  
+  if (whereCondition) {
+    code += ` WHERE ${whereCondition}`;
+  }
+  
+  // Aggiungi GROUP BY se richiesto
+  if (useGroupBy && groupByField) {
+    code += `
+  GROUP BY ${groupByField}
+  ${groupByOrder}`;
+  }
+  
+  if (useAssigning) {
+    code += ` ASSIGNING FIELD-SYMBOL(<${variable}>)`;
+  } else if (useReferenceInto) {
+    code += ` REFERENCE INTO DATA(${variable})`;
+  } else {
+    code += ` INTO ${variable}`;
+  }
+  
+  if (addIndex) {
+    code += ` FROM ${indexFrom} TO ${indexTo}`;
+  }
+  
+  code += `.
+  ${content}
+ENDLOOP.`;
+  
+  return code;
+};
+
   
   // DO-ENDDO
   export const generateDoEnddo = (formData) => {
@@ -126,48 +169,76 @@ export const generateGeneric = (formData) => {
   ENDWHILE.`;
   };
   
-  // SELECT
-  export const generateSelect = (formData) => {
-    const { fields, table, into, where, orderBy, groupBy, having, addJoin, joinType, joinTable, joinCondition } = formData;
-    
-    let code = `SELECT ${fields}`;
-    
-    if (addJoin) {
-      code += `
-    FROM ${table}
-    ${joinType} ${joinTable} ON ${joinCondition}`;
-    } else {
-      code += `
-    FROM ${table}`;
-    }
-    
+  // SELECT migliorato con UNION ALL e FOR ALL ENTRIES
+export const generateSelect = (formData) => {
+  const { 
+    fields, 
+    table, 
+    into, 
+    where, 
+    orderBy, 
+    groupBy, 
+    having, 
+    addJoin, 
+    joinType, 
+    joinTable, 
+    joinCondition,
+    useUnion = false,           // Nuovo parametro
+    unionType = 'UNION ALL',    // Nuovo parametro
+    unionSelect = '',           // Nuovo parametro
+    useForAllEntries = false,   // Nuovo parametro
+    forAllEntriesTable = '',    // Nuovo parametro
+    forAllEntriesWhere = ''     // Nuovo parametro
+  } = formData;
+  
+  let code = `SELECT ${fields}`;
+  
+  if (addJoin) {
     code += `
-    INTO ${into}`;
-    
-    if (where) {
-      code += `
-    WHERE ${where}`;
-    }
-    
-    if (groupBy) {
-      code += `
-    GROUP BY ${groupBy}`;
-    }
-    
-    if (having) {
-      code += `
-    HAVING ${having}`;
-    }
-    
-    if (orderBy) {
-      code += `
-    ORDER BY ${orderBy}`;
-    }
-    
-    code += `.`;
-    
-    return code;
-  };
+  FROM ${table}
+  ${joinType} ${joinTable} ON ${joinCondition}`;
+  } else if (useForAllEntries && forAllEntriesTable) {
+    code += `
+  FROM ${table}
+  FOR ALL ENTRIES IN ${forAllEntriesTable}
+  WHERE ${forAllEntriesWhere || `${table}~id = ${forAllEntriesTable}-id`}`;
+  } else {
+    code += `
+  FROM ${table}`;
+  }
+  
+  if (where && !useForAllEntries) {
+    code += `
+  WHERE ${where}`;
+  }
+  
+  if (groupBy) {
+    code += `
+  GROUP BY ${groupBy}`;
+  }
+  
+  if (having) {
+    code += `
+  HAVING ${having}`;
+  }
+  
+  if (orderBy) {
+    code += `
+  ORDER BY ${orderBy}`;
+  }
+  
+  // Aggiungi UNION o UNION ALL se richiesto
+  if (useUnion && unionSelect) {
+    code += `
+${unionType}
+${unionSelect}`;
+  }
+  
+  code += `
+  INTO ${into}.`;
+  
+  return code;
+};
   
   // UPDATE
   export const generateUpdate = (formData) => {
@@ -274,32 +345,53 @@ export const generateGeneric = (formData) => {
     return `FIELD-SYMBOLS: <${name}> TYPE ${type}.`;
   };
   
-  // INTERNAL TABLE
-  export const generateInternalTable = (formData) => {
-    const { name, type, isStandard, keyType, initialSize } = formData;
-    
-    let code = `DATA: ${name} TYPE`;
-    
-    if (isStandard) {
-      code += ` STANDARD`;
-    } else {
-      code += ` SORTED`;
-    }
-    
-    code += ` TABLE OF ${type}`;
-    
-    if (keyType) {
-      code += ` WITH ${keyType} KEY`;
-    }
-    
-    if (initialSize) {
-      code += ` INITIAL SIZE ${initialSize}`;
-    }
-    
-    code += `.`;
-    
-    return code;
-  };
+  // INTERNAL TABLE migliorato con dati iniziali
+export const generateInternalTable = (formData) => {
+  const { 
+    name, 
+    type, 
+    tableType, 
+    keyType, 
+    initialSize,
+    withHeader = false,
+    includeInitialData = false,  // Nuovo parametro
+    initialData = ''             // Nuovo parametro
+  } = formData;
+  
+  let code = `DATA: ${name} TYPE`;
+  
+  if (tableType) {
+    code += ` ${tableType} TABLE OF ${type}`;
+  } else {
+    code += ` STANDARD TABLE OF ${type}`;
+  }
+  
+  if (keyType) {
+    code += ` WITH ${keyType} KEY`;
+  }
+  
+  if (initialSize) {
+    code += ` INITIAL SIZE ${initialSize}`;
+  }
+  
+  if (withHeader) {
+    code += ` WITH HEADER LINE`;
+  }
+  
+  code += `.`;
+  
+  // Aggiungi dati iniziali se richiesto
+  if (includeInitialData && initialData) {
+    code += `
+
+${name} = VALUE #( 
+  ${initialData}
+).`;
+  }
+  
+  return code;
+};
+
   
   // DATA Declaration
   export const generateDataDeclaration = (formData) => {
@@ -323,26 +415,52 @@ export const generateGeneric = (formData) => {
     return code;
   };
   
-  // TRY-CATCH
-  export const generateTryCatch = (formData) => {
-    const { tryBlock, catchBlock, catchClass, cleanup } = formData;
-    
-    let code = `TRY.
-    ${tryBlock}
-  CATCH ${catchClass}.
-    ${catchBlock}`;
-    
-    if (cleanup) {
+  // TRY-CATCH migliorato con supporto RESUME
+export const generateTryCatch = (formData) => {
+  const { 
+    tryBlock, 
+    catchBlocks, 
+    cleanup,
+    addCleanup = false,
+    multipleExceptions = false,
+    useResume = false  // Nuovo parametro
+  } = formData;
+  
+  let code = `TRY.
+  ${tryBlock}`;
+  
+  if (multipleExceptions && catchBlocks && catchBlocks.length > 0) {
+    catchBlocks.forEach(catchBlock => {
       code += `
-  CLEANUP.
-    ${cleanup}`;
-    }
-    
+CATCH ${catchBlock.className} INTO DATA(lx_exc).
+  ${catchBlock.content}`;
+      if (useResume && catchBlock.useResume) {
+        code += `
+  RESUME.`;
+      }
+    });
+  } else if (catchBlocks && catchBlocks.length > 0) {
     code += `
-  ENDTRY.`;
-    
-    return code;
-  };
+CATCH ${catchBlocks[0].className} INTO DATA(lx_exc).
+  ${catchBlocks[0].content}`;
+    if (useResume && catchBlocks[0].useResume) {
+      code += `
+  RESUME.`;
+    }
+  }
+  
+  if (addCleanup && cleanup) {
+    code += `
+CLEANUP.
+  ${cleanup}`;
+  }
+  
+  code += `
+ENDTRY.`;
+  
+  return code;
+};
+
   
   // RAISE EXCEPTION
   export const generateRaiseException = (formData) => {
@@ -387,70 +505,152 @@ export const generateGeneric = (formData) => {
     return code;
   };
   
-  // CLASS
-  export const generateClass = (formData) => {
-    const { name, definition, visibility, superclass, inheritance, interfaces, methods, attributes } = formData;
+  // CLASS migliorata con supporto per EVENTS e metodi GET/SET automatici
+export const generateClass = (formData) => {
+  const { 
+    name, 
+    definition, 
+    visibility, 
+    superclass, 
+    interfaces,
+    attributes = [],
+    methods = [],
+    events = [],                // Nuovo parametro
+    generateGetSet = false,     // Nuovo parametro
+    isSingleton = false         // Nuovo parametro
+  } = formData;
+  
+  let code = `CLASS ${name} ${definition}`;
+  
+  if (isSingleton) {
+    code += ` CREATE PRIVATE`;
+  }
+  
+  if (superclass) {
+    code += ` INHERITING FROM ${superclass}`;
+  }
+  
+  if (interfaces) {
+    code += ` INTERFACES ${interfaces}`;
+  }
+  
+  code += `.\n`;
+  
+  // Sezione pubblica
+  code += `  PUBLIC SECTION.\n`;
+  
+  // Eventi
+  if (events && events.length > 0) {
+    code += `    EVENTS:\n`;
+    const eventDeclarations = events.map(event => `      ${event.name} EXPORTING VALUE(${event.paramName}) TYPE ${event.paramType}`);
+    code += eventDeclarations.join(',\n');
+    code += `.\n\n`;
+  }
+  
+  // Singleton pattern
+  if (isSingleton) {
+    code += `    CLASS-METHODS:
+      get_instance RETURNING VALUE(ro_instance) TYPE REF TO ${name}.\n\n`;
+  }
+  
+  // Metodi pubblici
+  if (methods && methods.filter(m => m.visibility === 'PUBLIC').length > 0) {
+    code += `    METHODS:\n`;
+    const publicMethods = methods.filter(m => m.visibility === 'PUBLIC');
     
-    let code = `CLASS ${name} ${definition}`;
-    
-    if (superclass) {
-      code += ` INHERITING FROM ${superclass}`;
-    }
-    
-    if (interfaces) {
-      code += ` INTERFACES ${interfaces}`;
-    }
-    
-    code += `.\n`;
-    
-    // Attributi della classe
-    if (attributes && attributes.length > 0) {
-      code += `  PUBLIC SECTION.\n`;
-      for (const attr of attributes.filter(a => a.visibility === 'PUBLIC')) {
-        code += `    DATA: ${attr.name} TYPE ${attr.type}.\n`;
+    const methodDeclarations = publicMethods.map(method => {
+      let methodDecl = `      ${method.name}`;
+      
+      if (method.importing) {
+        methodDecl += `\n        IMPORTING ${method.importing}`;
       }
       
-      code += `\n  PROTECTED SECTION.\n`;
-      for (const attr of attributes.filter(a => a.visibility === 'PROTECTED')) {
-        code += `    DATA: ${attr.name} TYPE ${attr.type}.\n`;
+      if (method.exporting) {
+        methodDecl += `\n        EXPORTING ${method.exporting}`;
       }
       
-      code += `\n  PRIVATE SECTION.\n`;
-      for (const attr of attributes.filter(a => a.visibility === 'PRIVATE')) {
-        code += `    DATA: ${attr.name} TYPE ${attr.type}.\n`;
+      if (method.returning) {
+        methodDecl += `\n        RETURNING VALUE(${method.returning.name}) TYPE ${method.returning.type}`;
       }
-    }
+      
+      return methodDecl;
+    });
     
-    // Metodi della classe
-    if (methods && methods.length > 0) {
-      code += `\n  METHODS:\n`;
+    code += methodDeclarations.join(',\n\n');
+    code += `.\n\n`;
+  }
+  
+  // Attributi pubblici
+  if (attributes && attributes.filter(a => a.visibility === 'PUBLIC').length > 0) {
+    code += `    DATA:\n`;
+    const publicAttrs = attributes.filter(a => a.visibility === 'PUBLIC');
+    const attrDeclarations = publicAttrs.map(attr => `      ${attr.name} TYPE ${attr.type}`);
+    code += attrDeclarations.join(',\n');
+    code += `.\n\n`;
+    
+    // Genera metodi getter/setter automatici se richiesto
+    if (generateGetSet && publicAttrs.length > 0) {
+      code += `    METHODS:\n`;
+      const getSetMethods = [];
       
-      const methodDeclarations = methods.map(method => {
-        let methodDecl = `    ${method.name}`;
+      publicAttrs.forEach(attr => {
+        const attrNameWithoutPrefix = attr.name.replace(/^m[tvs]_/, '');
+        const setterName = `set_${attrNameWithoutPrefix}`;
+        const getterName = `get_${attrNameWithoutPrefix}`;
         
-        if (method.importing) {
-          methodDecl += `\n      IMPORTING ${method.importing}`;
-        }
-        
-        if (method.exporting) {
-          methodDecl += `\n      EXPORTING ${method.exporting}`;
-        }
-        
-        if (method.returning) {
-          methodDecl += `\n      RETURNING VALUE(${method.returning.name}) TYPE ${method.returning.type}`;
-        }
-        
-        return methodDecl;
+        getSetMethods.push(`      ${setterName} IMPORTING iv_${attrNameWithoutPrefix} TYPE ${attr.type}`);
+        getSetMethods.push(`      ${getterName} RETURNING VALUE(rv_${attrNameWithoutPrefix}) TYPE ${attr.type}`);
       });
       
-      code += methodDeclarations.join(',\n\n');
-      code += `.`;
+      code += getSetMethods.join(',\n');
+      code += `.\n\n`;
     }
-    
-    code += `\nENDCLASS.`;
-    
-    return code;
-  };
+  }
+  
+  // Sezione protetta e attributi protected
+  if (attributes && attributes.filter(a => a.visibility === 'PROTECTED').length > 0) {
+    code += `  PROTECTED SECTION.\n    DATA:\n`;
+    const protectedAttrs = attributes.filter(a => a.visibility === 'PROTECTED');
+    const attrDeclarations = protectedAttrs.map(attr => `      ${attr.name} TYPE ${attr.type}`);
+    code += attrDeclarations.join(',\n');
+    code += `.\n\n`;
+  }
+  
+  // Sezione privata e attributi private
+  code += `  PRIVATE SECTION.\n`;
+  
+  // Singleton instance
+  if (isSingleton) {
+    code += `    CLASS-DATA:
+      go_instance TYPE REF TO ${name}.\n\n`;
+  }
+  
+  if (attributes && attributes.filter(a => a.visibility === 'PRIVATE').length > 0) {
+    code += `    DATA:\n`;
+    const privateAttrs = attributes.filter(a => a.visibility === 'PRIVATE');
+    const attrDeclarations = privateAttrs.map(attr => `      ${attr.name} TYPE ${attr.type}`);
+    code += attrDeclarations.join(',\n');
+    code += `.\n\n`;
+  }
+  
+  code += `ENDCLASS.`;
+  
+  // Implementazione GET_INSTANCE per singleton
+  if (isSingleton) {
+    code += `
+
+CLASS ${name} IMPLEMENTATION.
+  METHOD get_instance.
+    IF go_instance IS NOT BOUND.
+      CREATE OBJECT go_instance.
+    ENDIF.
+    ro_instance = go_instance.
+  ENDMETHOD.
+ENDCLASS.`;
+  }
+  
+  return code;
+};
   
   // INTERFACE
   export const generateInterface = (formData) => {

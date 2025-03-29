@@ -1,3 +1,4 @@
+// InternalTableForm.js - Migliorato con dati iniziali
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
@@ -14,7 +15,9 @@ const InternalTableForm = ({ onGenerate }) => {
     tableType: 'STANDARD',
     keyType: 'DEFAULT',
     initialSize: '10',
-    withHeader: false
+    withHeader: false,
+    includeInitialData: false, // Nuovo campo
+    initialData: '( field1 = \'value1\' field2 = 10 )\n( field1 = \'value2\' field2 = 20 )' // Nuovo campo
   });
   
   // Accesso al context
@@ -51,7 +54,8 @@ const InternalTableForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Nome della tabella interna:">
-        <ControlledInput type="text"
+        <ControlledInput
+          type="text"
           name="name"
           value={formData.name}
           onChange={handleChange}
@@ -59,7 +63,8 @@ const InternalTableForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Tipo di riga:">
-        <ControlledInput type="text"
+        <ControlledInput
+          type="text"
           name="type"
           value={formData.type}
           onChange={handleChange}
@@ -95,22 +100,51 @@ const InternalTableForm = ({ onGenerate }) => {
       </FormGroup>
       
       <FormGroup label="Dimensione iniziale (opzionale):">
-        <ControlledInput type="text"
+        <ControlledInput
+          type="text"
           name="initialSize"
           value={formData.initialSize}
           onChange={handleChange}
         />
       </FormGroup>
       
-      <FormGroup inline>
-        <ControlledInput type="checkbox"
-          name="withHeader"
-          checked={formData.withHeader}
-          onChange={handleChange}
-          id="withHeader"
-        />
-        <label htmlFor="withHeader">Aggiungi header line</label>
-      </FormGroup>
+      <AdvancedOptions>
+        <h4>Opzioni Avanzate</h4>
+        
+        <FormGroup inline>
+          <input
+            type="checkbox"
+            name="withHeader"
+            checked={formData.withHeader}
+            onChange={handleChange}
+            id="withHeader"
+          />
+          <label htmlFor="withHeader">Aggiungi header line</label>
+        </FormGroup>
+        
+        <FormGroup inline>
+          <input
+            type="checkbox"
+            name="includeInitialData"
+            checked={formData.includeInitialData}
+            onChange={handleChange}
+            id="includeInitialData"
+          />
+          <label htmlFor="includeInitialData">Includi dati iniziali</label>
+        </FormGroup>
+        
+        {formData.includeInitialData && (
+          <FormGroup label="Dati iniziali:">
+            <ControlledTextarea
+              name="initialData"
+              value={formData.initialData}
+              onChange={handleChange}
+              rows={5}
+              placeholder="es. ( field1 = 'value1' field2 = 10 )"
+            />
+          </FormGroup>
+        )}
+      </AdvancedOptions>
       
       <ButtonContainer>
         <Button 
@@ -145,6 +179,22 @@ const FormContainer = styled.div`
     outline: none;
     border-color: #0066cc;
     box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+  }
+`;
+
+const AdvancedOptions = styled.div`
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+  margin-top: 15px;
+  
+  h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #333;
   }
 `;
 

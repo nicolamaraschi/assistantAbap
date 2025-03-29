@@ -1,10 +1,13 @@
+// IfElseForm.js - Migliorato con supporto multi-ELSEIF
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
+import { FiPlus, FiTrash2 } from 'react-icons/fi';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
-// Componente per il form IF-ELSE
 const IfElseForm = ({ onGenerate }) => {
   // Stato locale del form
   const [formData, setFormData] = useState({
@@ -12,8 +15,9 @@ const IfElseForm = ({ onGenerate }) => {
     trueAction: 'WRITE: / \'Condizione verificata\'.',
     falseAction: 'WRITE: / \'Condizione non verificata\'.',
     addElseIf: false,
-    elseIfCondition: 'campo = altro_valore',
-    elseIfAction: 'WRITE: / \'Condizione ELSEIF verificata\'.'
+    elseIfConditions: [], // Nuovo array per multiple condizioni ELSEIF
+    elseIfCondition: 'campo = altro_valore', // Mantenuto per retrocompatibilità
+    elseIfAction: 'WRITE: / \'Condizione ELSEIF verificata\'.' // Mantenuto per retrocompatibilità
   });
   
   // Accesso al context
@@ -40,6 +44,58 @@ const IfElseForm = ({ onGenerate }) => {
     });
   };
   
+  // Gestisce il cambiamento delle condizioni ELSEIF
+  const handleElseIfChange = (index, field, value) => {
+    const newElseIfConditions = [...formData.elseIfConditions];
+    newElseIfConditions[index] = {
+      ...newElseIfConditions[index],
+      [field]: value
+    };
+    
+    setFormData({
+      ...formData,
+      elseIfConditions: newElseIfConditions
+    });
+  };
+  
+  // Aggiunge una nuova condizione ELSEIF
+  const handleAddElseIf = () => {
+    // Se è la prima condizione aggiunta e il vecchio formato ha dati, convertiamoli
+    if (formData.elseIfConditions.length === 0 && formData.elseIfCondition) {
+      setFormData({
+        ...formData,
+        elseIfConditions: [
+          {
+            condition: formData.elseIfCondition,
+            action: formData.elseIfAction
+          }
+        ]
+      });
+    } else {
+      setFormData({
+        ...formData,
+        elseIfConditions: [
+          ...formData.elseIfConditions,
+          {
+            condition: 'altra_condizione',
+            action: 'WRITE: / \'Altra condizione verificata\'.'
+          }
+        ]
+      });
+    }
+  };
+  
+  // Rimuove una condizione ELSEIF
+  const handleRemoveElseIf = (index) => {
+    const newElseIfConditions = [...formData.elseIfConditions];
+    newElseIfConditions.splice(index, 1);
+    
+    setFormData({
+      ...formData,
+      elseIfConditions: newElseIfConditions
+    });
+  };
+  
   // Gestisce la generazione del codice
   const handleGenerate = () => {
     if (onGenerate) {
@@ -50,27 +106,21 @@ const IfElseForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Condizione:">
-        <StyledInputContainer>
-          <StyledInput
-            type="text"
-            name="condition"
-            value={formData.condition}
-            onChange={handleChange}
-          />
-          {!formData.condition && <PlaceholderText>Inserisci la condizione</PlaceholderText>}
-        </StyledInputContainer>
+        <ControlledInput
+          type="text"
+          name="condition"
+          value={formData.condition}
+          onChange={handleChange}
+        />
       </FormGroup>
       
       <FormGroup label="Blocco IF:">
-        <StyledTextareaContainer>
-          <StyledTextarea
-            name="trueAction"
-            value={formData.trueAction}
-            onChange={handleChange}
-            rows={4}
-          />
-          {!formData.trueAction && <PlaceholderText>Inserisci il codice per il blocco IF</PlaceholderText>}
-        </StyledTextareaContainer>
+        <ControlledTextarea
+          name="trueAction"
+          value={formData.trueAction}
+          onChange={handleChange}
+          rows={4}
+        />
       </FormGroup>
       
       <FormGroup inline>
@@ -81,47 +131,94 @@ const IfElseForm = ({ onGenerate }) => {
           onChange={handleChange}
           id="addElseIf"
         />
-        <label htmlFor="addElseIf">Aggiungi blocco ELSEIF</label>
+        <label htmlFor="addElseIf">Aggiungi blocchi ELSEIF</label>
       </FormGroup>
       
       {formData.addElseIf && (
         <>
-          <FormGroup label="Condizione ELSEIF:">
-            <StyledInputContainer>
-              <StyledInput
-                type="text"
-                name="elseIfCondition"
-                value={formData.elseIfCondition}
-                onChange={handleChange}
-              />
-              {!formData.elseIfCondition && <PlaceholderText>Inserisci la condizione ELSEIF</PlaceholderText>}
-            </StyledInputContainer>
-          </FormGroup>
-          
-          <FormGroup label="Blocco ELSEIF:">
-            <StyledTextareaContainer>
-              <StyledTextarea
-                name="elseIfAction"
-                value={formData.elseIfAction}
-                onChange={handleChange}
-                rows={4}
-              />
-              {!formData.elseIfAction && <PlaceholderText>Inserisci il codice per il blocco ELSEIF</PlaceholderText>}
-            </StyledTextareaContainer>
-          </FormGroup>
+          {formData.elseIfConditions.length > 0 ? (
+            // Nuovo formato multi-ELSEIF
+            <ElseIfContainer>
+              {formData.elseIfConditions.map((elseIf, index) => (
+                <ElseIfBlock key={index}>
+                  <ElseIfHeader>
+                    <h4>Blocco ELSEIF {index + 1}</h4>
+                    <Button
+                      variant="text"
+                      size="small"
+                      icon={<FiTrash2 />}
+                      onClick={() => handleRemoveElseIf(index)}
+                    />
+                  </ElseIfHeader>
+                  
+                  <FormGroup label="Condizione ELSEIF:">
+                    <ControlledInput
+                      type="text"
+                      value={elseIf.condition}
+                      onChange={(e) => handleElseIfChange(index, 'condition', e.target.value)}
+                    />
+                  </FormGroup>
+                  
+                  <FormGroup label="Blocco ELSEIF:">
+                    <ControlledTextarea
+                      value={elseIf.action}
+                      onChange={(e) => handleElseIfChange(index, 'action', e.target.value)}
+                      rows={3}
+                    />
+                  </FormGroup>
+                </ElseIfBlock>
+              ))}
+              
+              <Button
+                variant="outline"
+                size="small"
+                icon={<FiPlus />}
+                onClick={handleAddElseIf}
+              >
+                Aggiungi altro ELSEIF
+              </Button>
+            </ElseIfContainer>
+          ) : (
+            // Vecchio formato retro-compatibile
+            <>
+              <FormGroup label="Condizione ELSEIF:">
+                <ControlledInput
+                  type="text"
+                  name="elseIfCondition"
+                  value={formData.elseIfCondition}
+                  onChange={handleChange}
+                />
+              </FormGroup>
+              
+              <FormGroup label="Blocco ELSEIF:">
+                <ControlledTextarea
+                  name="elseIfAction"
+                  value={formData.elseIfAction}
+                  onChange={handleChange}
+                  rows={4}
+                />
+              </FormGroup>
+              
+              <Button
+                variant="outline"
+                size="small"
+                icon={<FiPlus />}
+                onClick={handleAddElseIf}
+              >
+                Aggiungi altro ELSEIF
+              </Button>
+            </>
+          )}
         </>
       )}
       
       <FormGroup label="Blocco ELSE:">
-        <StyledTextareaContainer>
-          <StyledTextarea
-            name="falseAction"
-            value={formData.falseAction}
-            onChange={handleChange}
-            rows={4}
-          />
-          {!formData.falseAction && <PlaceholderText>Inserisci il codice per il blocco ELSE</PlaceholderText>}
-        </StyledTextareaContainer>
+        <ControlledTextarea
+          name="falseAction"
+          value={formData.falseAction}
+          onChange={handleChange}
+          rows={4}
+        />
       </FormGroup>
       
       <ButtonContainer>
@@ -142,61 +239,29 @@ const FormContainer = styled.div`
   padding: 15px;
 `;
 
-const StyledInputContainer = styled.div`
-  position: relative;
-  width: 100%;
+const ElseIfContainer = styled.div`
+  margin-bottom: 15px;
 `;
 
-const StyledInput = styled.input`
-  width: 100%;
-  padding: 10px;
+const ElseIfBlock = styled.div`
+  background-color: #f5f5f5;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 15px;
-  transition: border-color 0.3s, box-shadow 0.3s;
-  font-family: 'Courier New', monospace;
-  background-color: transparent;
+  padding: 15px;
+  margin-bottom: 15px;
+`;
+
+const ElseIfHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
   
-  &:focus {
-    outline: none;
-    border-color: #0066cc;
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+  h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
   }
-`;
-
-const StyledTextareaContainer = styled.div`
-  position: relative;
-  width: 100%;
-`;
-
-const StyledTextarea = styled.textarea`
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 15px;
-  transition: border-color 0.3s, box-shadow 0.3s;
-  font-family: 'Courier New', monospace;
-  resize: vertical;
-  min-height: 80px;
-  background-color: transparent;
-  
-  &:focus {
-    outline: none;
-    border-color: #0066cc;
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
-  }
-`;
-
-const PlaceholderText = styled.div`
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  color: #aaa;
-  pointer-events: none;
-  z-index: 1;
-  font-family: 'Courier New', monospace;
-  font-size: 15px;
 `;
 
 const ButtonContainer = styled.div`

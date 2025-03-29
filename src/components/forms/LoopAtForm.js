@@ -1,10 +1,12 @@
+// LoopAtForm.js - Migliorato con GROUP BY e REFERENCE INTO
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
+import ControlledInput from '../common/ControlledInput';
+import ControlledTextarea from '../common/ControlledTextarea';
 
-// Componente per il form LOOP AT
 const LoopAtForm = ({ onGenerate }) => {
   // Stato locale del form
   const [formData, setFormData] = useState({
@@ -13,7 +15,13 @@ const LoopAtForm = ({ onGenerate }) => {
     whereCondition: '',
     content: 'WRITE: / ls_line-field.',
     useAssigning: false,
-    addIndex: false
+    addIndex: false,
+    indexFrom: '1',
+    indexTo: '10',
+    useGroupBy: false,  // Nuova opzione
+    groupByField: 'field', // Nuovo campo
+    groupByOrder: 'ASCENDING', // Nuovo campo
+    useReferenceInto: false // Nuova opzione
   });
   
   // Accesso al context
@@ -50,77 +58,167 @@ const LoopAtForm = ({ onGenerate }) => {
   return (
     <FormContainer>
       <FormGroup label="Tabella:">
-        <StyledInputContainer>
-          <StyledInput
-            type="text"
-            name="table"
-            value={formData.table}
-            onChange={handleChange}
-          />
-          {!formData.table && <PlaceholderText>Inserisci il nome della tabella</PlaceholderText>}
-        </StyledInputContainer>
-      </FormGroup>
-      
-      <FormGroup inline>
-        <input
-          type="checkbox"
-          name="useAssigning"
-          checked={formData.useAssigning}
+        <ControlledInput
+          type="text"
+          name="table"
+          value={formData.table}
           onChange={handleChange}
-          id="useAssigning"
         />
-        <label htmlFor="useAssigning">Usa ASSIGNING invece di INTO</label>
       </FormGroup>
       
-      <FormGroup label={formData.useAssigning ? "Nome Field-Symbol:" : "Variabile di destinazione:"}>
-        <StyledInputContainer>
-          <StyledInput
+      <FormGroup label="Condizione WHERE (opzionale):">
+        <ControlledInput
+          type="text"
+          name="whereCondition"
+          value={formData.whereCondition}
+          onChange={handleChange}
+          placeholder="es. field = 'value'"
+        />
+      </FormGroup>
+      
+      <AdvancedOptions>
+        <h4>Opzioni Avanzate</h4>
+        
+        <AdvancedSection>
+          <h5>Tipo di Loop</h5>
+          
+          <FormGroup inline>
+            <input
+              type="radio"
+              name="loopType"
+              id="loopInto"
+              checked={!formData.useAssigning && !formData.useReferenceInto}
+              onChange={() => setFormData({
+                ...formData,
+                useAssigning: false,
+                useReferenceInto: false
+              })}
+            />
+            <label htmlFor="loopInto">INTO</label>
+          </FormGroup>
+          
+          <FormGroup inline>
+            <input
+              type="radio"
+              name="loopType"
+              id="loopAssigning"
+              checked={formData.useAssigning}
+              onChange={() => setFormData({
+                ...formData,
+                useAssigning: true,
+                useReferenceInto: false
+              })}
+            />
+            <label htmlFor="loopAssigning">ASSIGNING Field-Symbol</label>
+          </FormGroup>
+          
+          <FormGroup inline>
+            <input
+              type="radio"
+              name="loopType"
+              id="loopReference"
+              checked={formData.useReferenceInto}
+              onChange={() => setFormData({
+                ...formData,
+                useAssigning: false,
+                useReferenceInto: true
+              })}
+            />
+            <label htmlFor="loopReference">REFERENCE INTO</label>
+          </FormGroup>
+        </AdvancedSection>
+        
+        <FormGroup label="Variabile di destinazione:">
+          <ControlledInput
             type="text"
             name="variable"
             value={formData.variable}
             onChange={handleChange}
+            placeholder={formData.useAssigning ? "Nome field-symbol" : (formData.useReferenceInto ? "Nome reference" : "Nome variabile")}
           />
-          {!formData.variable && (
-            <PlaceholderText>
-              {formData.useAssigning ? "Inserisci il nome del field-symbol" : "Inserisci il nome della variabile"}
-            </PlaceholderText>
+        </FormGroup>
+        
+        <AdvancedSection>
+          <FormGroup inline>
+            <input
+              type="checkbox"
+              name="addIndex"
+              checked={formData.addIndex}
+              onChange={handleChange}
+              id="addIndex"
+            />
+            <label htmlFor="addIndex">Limita intervallo di loop (FROM/TO)</label>
+          </FormGroup>
+          
+          {formData.addIndex && (
+            <IndexRange>
+              <FormGroup label="Da:">
+                <ControlledInput
+                  type="text"
+                  name="indexFrom"
+                  value={formData.indexFrom}
+                  onChange={handleChange}
+                />
+              </FormGroup>
+              
+              <FormGroup label="A:">
+                <ControlledInput
+                  type="text"
+                  name="indexTo"
+                  value={formData.indexTo}
+                  onChange={handleChange}
+                />
+              </FormGroup>
+            </IndexRange>
           )}
-        </StyledInputContainer>
-      </FormGroup>
-      
-      <FormGroup label="Condizione WHERE (opzionale):">
-        <StyledInputContainer>
-          <StyledInput
-            type="text"
-            name="whereCondition"
-            value={formData.whereCondition}
-            onChange={handleChange}
-          />
-          {!formData.whereCondition && <PlaceholderText>es. field = 'value'</PlaceholderText>}
-        </StyledInputContainer>
-      </FormGroup>
-      
-      <FormGroup inline>
-        <input
-          type="checkbox"
-          name="addIndex"
-          checked={formData.addIndex}
-          onChange={handleChange}
-          id="addIndex"
-        />
-        <label htmlFor="addIndex">Aggiungi FROM/TO (limita il loop)</label>
-      </FormGroup>
+        </AdvancedSection>
+        
+        <AdvancedSection>
+          <FormGroup inline>
+            <input
+              type="checkbox"
+              name="useGroupBy"
+              checked={formData.useGroupBy}
+              onChange={handleChange}
+              id="useGroupBy"
+            />
+            <label htmlFor="useGroupBy">Usa GROUP BY</label>
+          </FormGroup>
+          
+          {formData.useGroupBy && (
+            <>
+              <FormGroup label="Campo di raggruppamento:">
+                <ControlledInput
+                  type="text"
+                  name="groupByField"
+                  value={formData.groupByField}
+                  onChange={handleChange}
+                  placeholder="es. field"
+                />
+              </FormGroup>
+              
+              <FormGroup label="Ordinamento:">
+                <select
+                  name="groupByOrder"
+                  value={formData.groupByOrder}
+                  onChange={handleChange}
+                >
+                  <option value="ASCENDING">ASCENDING</option>
+                  <option value="DESCENDING">DESCENDING</option>
+                </select>
+              </FormGroup>
+            </>
+          )}
+        </AdvancedSection>
+      </AdvancedOptions>
       
       <FormGroup label="Contenuto del loop:">
-        <StyledTextareaContainer>
-          <StyledTextarea
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            rows={5}
-          />
-          {!formData.content && <PlaceholderText>Inserisci il contenuto del loop</PlaceholderText>}
-        </StyledTextareaContainer>
+        <ControlledTextarea
+          name="content"
+          value={formData.content}
+          onChange={handleChange}
+          rows={5}
+        />
       </FormGroup>
       
       <ButtonContainer>
@@ -141,61 +239,43 @@ const FormContainer = styled.div`
   padding: 15px;
 `;
 
-const StyledInputContainer = styled.div`
-  position: relative;
-  width: 100%;
-`;
-
-const StyledInput = styled.input`
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 15px;
-  transition: border-color 0.3s, box-shadow 0.3s;
-  font-family: 'Courier New', monospace;
-  background-color: transparent;
+const AdvancedOptions = styled.div`
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
   
-  &:focus {
-    outline: none;
-    border-color: #0066cc;
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+  h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: #333;
   }
 `;
 
-const StyledTextareaContainer = styled.div`
-  position: relative;
-  width: 100%;
-`;
-
-const StyledTextarea = styled.textarea`
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
+const AdvancedSection = styled.div`
+  background: #fff;
+  border: 1px solid #eee;
   border-radius: 4px;
-  font-size: 15px;
-  transition: border-color 0.3s, box-shadow 0.3s;
-  font-family: 'Courier New', monospace;
-  resize: vertical;
-  min-height: 80px;
-  background-color: transparent;
+  padding: 12px;
+  margin-bottom: 12px;
   
-  &:focus {
-    outline: none;
-    border-color: #0066cc;
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.2);
+  h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #444;
   }
 `;
 
-const PlaceholderText = styled.div`
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  color: #aaa;
-  pointer-events: none;
-  z-index: 1;
-  font-family: 'Courier New', monospace;
-  font-size: 15px;
+const IndexRange = styled.div`
+  display: flex;
+  gap: 15px;
+  
+  > div {
+    flex: 1;
+  }
 `;
 
 const ButtonContainer = styled.div`

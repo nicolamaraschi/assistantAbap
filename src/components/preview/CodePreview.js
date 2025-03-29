@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { FiCopy, FiDownload, FiSave, FiCheck } from 'react-icons/fi';
+import { FiCopy, FiDownload } from 'react-icons/fi';
 import Button from '../common/Button';
 import { useAbap } from '../../context/AbapContext';
 
 // Componente per visualizzare l'anteprima del codice generato
-const CodePreview = ({ code, onSaveTemplate }) => {
-  const { settings, selectedConstructType, formState } = useAbap();
+const CodePreview = ({ code }) => {
+  const { settings } = useAbap();
   const [copied, setCopied] = useState(false);
   const [highlightedCode, setHighlightedCode] = useState(code);
   
@@ -40,18 +40,6 @@ const CodePreview = ({ code, onSaveTemplate }) => {
     URL.revokeObjectURL(url);
   };
   
-  // Gestisce il salvataggio come template
-  const handleSaveTemplate = () => {
-    const name = prompt('Inserisci un nome per questo template:');
-    if (name && onSaveTemplate) {
-      // Ottieni i dati del form per il tipo di costrutto selezionato
-      const formData = formState[selectedConstructType] || {};
-      
-      // Salva il template con il codice generato
-      onSaveTemplate(name, formData);
-    }
-  };
-  
   return (
     <PreviewContainer>
       <PreviewHeader>
@@ -74,15 +62,6 @@ const CodePreview = ({ code, onSaveTemplate }) => {
             title="Scarica come file"
           >
             Scarica
-          </Button>
-          <Button 
-            variant="text" 
-            size="small" 
-            icon={<FiSave />} 
-            onClick={handleSaveTemplate}
-            title="Salva come template riutilizzabile"
-          >
-            Salva Template
           </Button>
         </ActionsContainer>
       </PreviewHeader>
@@ -144,6 +123,13 @@ const addLineNumbers = (code) => {
 const countLines = (code) => {
   return code.split('\n').length;
 };
+
+// Definizione del componente FiCheck per evitare errori
+const FiCheck = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 6L9 17l-5-5"/>
+  </svg>
+);
 
 // Stili del componente
 const PreviewContainer = styled.div`

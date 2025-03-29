@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { FiSettings, FiStar, FiCode, FiClock, FiList, FiHelpCircle, FiSearch } from 'react-icons/fi';
+import { FiCode, FiList, FiHelpCircle, FiSettings } from 'react-icons/fi';
 
 // Componenti di layout
 import Header from './components/layout/Header';
@@ -39,13 +39,11 @@ import MethodChainForm from './components/forms/MethodChainForm';
 import MethodDefinitionForm from './components/forms/MethodDefinitionForm';
 import AlvGridForm from './components/forms/AlvGridForm';
 import BapiCallForm from './components/forms/BapiCallForm';
-import BreakpointAnalyzer from './components/debug/BreakpointAnalyzer';
 
 // Componenti di anteprima
 import CodePreview from './components/preview/CodePreview';
 
 // Componenti template e aiuto
-import TemplatesPanel from './components/templates/TemplatesPanel';
 import SearchBar from './components/search/SearchBar';
 import GenerationHistory from './components/history/GenerationHistory';
 import Documentation from './components/help/Documentation';
@@ -62,20 +60,14 @@ const AppContent = () => {
   // Utilizzo del context ABAP
   const { 
     selectedConstructType, 
-    setSelectedConstructType, 
-    favorites, 
-    addToFavorites, 
-    removeFromFavorites, 
+    setSelectedConstructType,
     generatedCode, 
     setGeneratedCode,
     settings,
     updateSettings,
     activeTab, 
     setActiveTab,
-    updateFormState,
-    savedTemplates,
-    saveTemplate,
-    deleteTemplate
+    updateFormState
   } = useAbap();
   
   // Utilizzo del generatore di codice
@@ -101,11 +93,7 @@ const AppContent = () => {
   // Opzioni per i tabs
   const tabOptions = [
     { id: 'standard', label: 'Standard', icon: <FiCode /> },
-    { id: 'favorites', label: 'Preferiti', icon: <FiStar /> },
-    { id: 'templates', label: 'Template', icon: <FiClock /> },
     { id: 'history', label: 'Cronologia', icon: <FiList /> },
-    { id: 'debug', label: 'Debug', icon: <FiSearch /> }, // Nuovo tab
-    { id: 'breakpoints', label: 'Breakpoints', icon: <FiSearch /> }, // Nuovo tab
     { id: 'help', label: 'Aiuto', icon: <FiHelpCircle /> },
     { id: 'settings', label: 'Impostazioni', icon: <FiSettings /> }
   ];
@@ -162,16 +150,6 @@ const AppContent = () => {
       }
     }
     return 'Altro';
-  };
-  
-  // Gestione del salvataggio template
-  const handleSaveTemplate = (name, formData) => {
-    try {
-      saveTemplate(name, selectedConstructType, formData, generatedCode);
-      showSuccess(`Template "${name}" salvato con successo!`);
-    } catch (error) {
-      showError(`Errore nel salvataggio del template: ${error.message}`);
-    }
   };
   
   // Rendering del form appropriato in base al tipo di costrutto selezionato
@@ -267,45 +245,6 @@ const AppContent = () => {
   // Rendering della tab selezionata
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'favorites':
-        return (
-          <div>
-            <h3>I tuoi costrutti preferiti</h3>
-            {favorites.length > 0 ? (
-              <FavoritesList>
-                {favorites.map(fav => (
-                  <FavoriteItem key={fav.id} onClick={() => setSelectedConstructType(fav.id)}>
-                    {fav.name}
-                  </FavoriteItem>
-                ))}
-              </FavoritesList>
-            ) : (
-              <p>Nessun costrutto preferito. Aggiungi dei costrutti ai preferiti!</p>
-            )}
-          </div>
-        );
-      case 'templates':
-        return (
-          <div>
-            <h3>Template salvati</h3>
-            <TemplatesPanel
-              onSelectTemplate={(template) => {
-                setSelectedConstructType(template.constructType);
-                // Qui dovremmo anche caricare i dati del form specifico
-                updateFormState(template.constructType, template.formData);
-                setGeneratedCode(template.generatedCode || '');
-                setActiveTab('standard');
-              }}
-            />
-          </div>
-        );
-        case 'debug':
-          return (
-            <div>
-              <h3>Analisi Breakpoint</h3>
-              <BreakpointAnalyzer />
-            </div>
-          );
       case 'history':
         return (
           <div>
@@ -379,25 +318,6 @@ const AppContent = () => {
                   options={constructOptions}
                   placeholder="Seleziona tipo di costrutto"
                 />
-                <FavoriteButton
-                  variant="outline"
-                  size="small"
-                  onClick={() => {
-                    const selectedConstruct = constructTypes.flatMap(group => group.items)
-                      .find(item => item.id === selectedConstructType);
-                    if (selectedConstruct) {
-                      if (favorites.some(fav => fav.id === selectedConstruct.id)) {
-                        removeFromFavorites(selectedConstruct.id);
-                        showInfo('Rimosso dai preferiti');
-                      } else {
-                        addToFavorites(selectedConstruct);
-                        showSuccess('Aggiunto ai preferiti');
-                      }
-                    }
-                  }}
-                >
-                  {favorites.some(fav => fav.id === selectedConstructType) ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti'}
-                </FavoriteButton>
               </div>
             </SelectContainer>
             
@@ -432,7 +352,6 @@ const AppContent = () => {
         <OutputPanel>
           <CodePreview 
             code={generatedCode} 
-            onSaveTemplate={handleSaveTemplate} 
           />
         </OutputPanel>
       </MainContent>
@@ -485,31 +404,6 @@ const OutputPanel = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-`;
-
-const FavoriteButton = styled(Button)`
-  white-space: nowrap;
-`;
-
-const FavoritesList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 15px;
-`;
-
-const FavoriteItem = styled.div`
-  padding: 10px 15px;
-  background: white;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: #f0f4f8;
-    border-color: #0066cc;
-  }
 `;
 
 const SettingsPanel = styled.div`

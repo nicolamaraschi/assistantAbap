@@ -9,12 +9,6 @@ export const AbapProvider = ({ children }) => {
   // Stato per il tipo di costrutto selezionato
   const [selectedConstructType, setSelectedConstructType] = useState('if-else');
   
-  // Stato per la gestione dei preferiti
-  const [favorites, setFavorites] = useLocalStorage('abap-favorites', []);
-  
-  // Stato per i modelli salvati
-  const [savedTemplates, setSavedTemplates] = useLocalStorage('abap-templates', []);
-  
   // Stato per visualizzare il codice generato
   const [generatedCode, setGeneratedCode] = useState('* Il codice ABAP apparirà qui');
   
@@ -32,9 +26,6 @@ export const AbapProvider = ({ children }) => {
   // Usa useRef invece di useState per lo stato del form per evitare rirender
   const formStateRef = useRef({});
   
-  // *** RIMUOVIAMO COMPLETAMENTE IL CARICAMENTO DELLO STATO DAI LOCALSTORAGE ***
-  // La persistenza è completamente disabilitata
-  
   // Funzione per aggiornare lo stato del form senza causare rirender
   const updateFormState = (constructType, newState) => {
     // Aggiorna solo lo stato nella ref, SENZA salvare in localStorage
@@ -42,8 +33,6 @@ export const AbapProvider = ({ children }) => {
       ...formStateRef.current,
       [constructType]: newState
     };
-    
-    // NON salvare in localStorage - rimuoviamo questa parte
   };
   
   // Funzione per leggere lo stato di un form specifico
@@ -62,37 +51,6 @@ export const AbapProvider = ({ children }) => {
     return {};
   };
   
-  // Aggiungi un preferito
-  const addToFavorites = (constructType) => {
-    if (!favorites.some(fav => fav.id === constructType.id)) {
-      setFavorites([...favorites, constructType]);
-    }
-  };
-  
-  // Rimuovi un preferito
-  const removeFromFavorites = (constructTypeId) => {
-    setFavorites(favorites.filter(fav => fav.id !== constructTypeId));
-  };
-  
-  // Salva un modello
-  const saveTemplate = (name, constructType, formData, generatedCode) => {
-    const template = {
-      id: Date.now().toString(),
-      name,
-      constructType,
-      formData,
-      generatedCode,
-      timestamp: new Date().toISOString()
-    };
-    
-    setSavedTemplates([...savedTemplates, template]);
-  };
-  
-  // Elimina un template
-  const deleteTemplate = (id) => {
-    setSavedTemplates(savedTemplates.filter(template => template.id !== id));
-  };
-  
   // Aggiorna le impostazioni
   const updateSettings = (newSettings) => {
     setSettings({
@@ -105,12 +63,6 @@ export const AbapProvider = ({ children }) => {
   const value = {
     selectedConstructType,
     setSelectedConstructType,
-    favorites,
-    addToFavorites,
-    removeFromFavorites,
-    savedTemplates,
-    saveTemplate,
-    deleteTemplate,
     generatedCode,
     setGeneratedCode,
     settings,
