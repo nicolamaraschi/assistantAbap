@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FiCode, FiList, FiHelpCircle, FiSettings } from 'react-icons/fi';
+import { FiCode, FiList, FiHelpCircle, FiSettings, FiBriefcase } from 'react-icons/fi';
 
 // Componenti di layout
 import Header from './components/layout/Header';
@@ -8,7 +8,7 @@ import SelectContainer from './components/layout/SelectContainer';
 
 // Componenti comuni
 import Select from './components/common/Select';
-import Button from './components/common/Button';
+import Button from './components/common/Button'; // Corretto il percorso di importazione
 import Tabs from './components/common/Tabs';
 import ToastManager from './components/common/ToastManager';
 import Breadcrumbs from './components/navigation/Breadcrumbs';
@@ -39,6 +39,7 @@ import MethodChainForm from './components/forms/MethodChainForm';
 import MethodDefinitionForm from './components/forms/MethodDefinitionForm';
 import AlvGridForm from './components/forms/AlvGridForm';
 import BapiCallForm from './components/forms/BapiCallForm';
+import BreakpointAnalyzer from './components/debug/BreakpointAnalyzer';
 
 // Componenti di anteprima
 import CodePreview from './components/preview/CodePreview';
@@ -70,6 +71,9 @@ const AppContent = () => {
     updateFormState
   } = useAbap();
   
+  // State per gestione content display (generatore vs analyzer)
+  const [contentDisplay, setContentDisplay] = useState('generator');
+  
   // Utilizzo del generatore di codice
   const { generateCode } = useCodeGenerator();
   
@@ -90,14 +94,23 @@ const AppContent = () => {
     options: group.items
   }));
   
-  // Opzioni per i tabs
+  // Opzioni per i tabs (uso FiBriefcase invece di FiBug che non esiste)
   const tabOptions = [
     { id: 'standard', label: 'Standard', icon: <FiCode /> },
+    { id: 'debug', label: 'Debug', icon: <FiBriefcase /> },
     { id: 'history', label: 'Cronologia', icon: <FiList /> },
     { id: 'help', label: 'Aiuto', icon: <FiHelpCircle /> },
     { id: 'settings', label: 'Impostazioni', icon: <FiSettings /> }
   ];
   
+  // Opzioni per content display nel tab standard
+  const contentDisplayOptions = [
+    { id: 'generator', label: 'Generatore' },
+    { id: 'analyzer', label: 'Analyzer' }
+  ];
+  
+  // Resto del codice rimane invariato...
+  // ...
   // Gestione del cambio di tipo di costrutto
   const handleConstructTypeChange = (e) => {
     setSelectedConstructType(e.target.value);
@@ -140,6 +153,7 @@ const AppContent = () => {
     
     // Torna alla tab standard
     setActiveTab('standard');
+    setContentDisplay('generator');
   };
   
   // Funzione helper per ottenere il gruppo di un costrutto
@@ -245,6 +259,58 @@ const AppContent = () => {
   // Rendering della tab selezionata
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'standard':
+        return (
+          <div>
+            <DisplayTabs>
+              {contentDisplayOptions.map(option => (
+                <DisplayTab 
+                  key={option.id}
+                  active={contentDisplay === option.id}
+                  onClick={() => setContentDisplay(option.id)}
+                >
+                  {option.label}
+                </DisplayTab>
+              ))}
+            </DisplayTabs>
+            
+            {contentDisplay === 'generator' ? (
+              <>
+                <SelectContainer>
+                  <label htmlFor="constructType">Seleziona tipo di costrutto:</label>
+                  <div className="select-wrapper">
+                    <Select
+                      id="constructType"
+                      value={selectedConstructType}
+                      onChange={handleConstructTypeChange}
+                      options={constructOptions}
+                      placeholder="Seleziona tipo di costrutto"
+                    />
+                  </div>
+                </SelectContainer>
+                
+                <Breadcrumbs 
+                  items={[
+                    { label: 'Home' },
+                    { label: getConstructGroupById(selectedConstructType) },
+                    { label: getConstructNameById(selectedConstructType) }
+                  ]}
+                />
+                
+                {renderForm()}
+              </>
+            ) : (
+              <BreakpointAnalyzer />
+            )}
+          </div>
+        );
+      case 'debug':
+        return (
+          <div>
+            <h3>Analisi Breakpoint</h3>
+            <BreakpointAnalyzer />
+          </div>
+        );
       case 'history':
         return (
           <div>
@@ -253,7 +319,7 @@ const AppContent = () => {
               history={history}
               onSelect={handleSelectFromHistory}
               onClear={clearHistory}
-              onCopy={(item) => {
+              oonCopy={(item) => {
                 navigator.clipboard.writeText(item.generatedCode);
                 showSuccess('Codice copiato negli appunti!');
               }}
@@ -308,28 +374,8 @@ const AppContent = () => {
       default:
         return (
           <div>
-            <SelectContainer>
-              <label htmlFor="constructType">Seleziona tipo di costrutto:</label>
-              <div className="select-wrapper">
-                <Select
-                  id="constructType"
-                  value={selectedConstructType}
-                  onChange={handleConstructTypeChange}
-                  options={constructOptions}
-                  placeholder="Seleziona tipo di costrutto"
-                />
-              </div>
-            </SelectContainer>
-            
-            <Breadcrumbs 
-              items={[
-                { label: 'Home' },
-                { label: getConstructGroupById(selectedConstructType) },
-                { label: getConstructNameById(selectedConstructType) }
-              ]}
-            />
-            
-            {renderForm()}
+            <h3>Seleziona una tab</h3>
+            <p>Utilizza le tab in alto per scegliere una funzionalità</p>
           </div>
         );
     }
@@ -427,6 +473,24 @@ const SettingItem = styled.div`
     padding: 5px 10px;
     border-radius: 4px;
     border: 1px solid #ddd;
+  }
+`;
+
+const DisplayTabs = styled.div`
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+`;
+
+const DisplayTab = styled.div`
+  padding: 8px 16px;
+  cursor: pointer;
+  border-bottom: 2px solid ${props => props.active ? '#0066cc' : 'transparent'};
+  color: ${props => props.active ? '#0066cc' : '#333'};
+  font-weight: ${props => props.active ? 'bold' : 'normal'};
+  
+  &:hover {
+    background-color: #f9f9f9;
   }
 `;
 
