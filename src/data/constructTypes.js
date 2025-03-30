@@ -32,6 +32,20 @@ const constructTypes = [
     ]
   },
   {
+    group: "Strutture Dati",
+    items: [
+      // ... altri elementi esistenti
+      { id: "flower", name: "Tabella Fiori" }
+    ]
+  },
+  {
+    group: "Report Speciali",
+    items: [
+      // ... altri elementi esistenti
+      { id: "flower", name: "Report Fiori" }
+    ]
+  },
+  {
     group: "Gestione Errori",
     items: [
       { id: "try-catch", name: "TRY-CATCH" },

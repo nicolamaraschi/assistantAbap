@@ -251,4 +251,4 @@ export function generateSelectionScreen(formData) {
   
   // Esporta anche come default per compatibilità
   const selectionScreenUtils = { generateSelectionScreen };
-  export default selectionScreenUtils;
+  export default selectionScreenUtils.generateSelectionScreen;

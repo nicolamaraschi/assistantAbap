@@ -42,6 +42,7 @@ import BapiCallForm from './components/forms/BapiCallForm';
 import BreakpointAnalyzer from './components/debug/BreakpointAnalyzer';
 import SelectionScreenForm from './components/forms/SelectionScreenForm';
 import AdvancedAlvForm from './components/forms/AdvancedAlvForm';
+import FlowerForm from './components/forms/FlowerForm';
 
 // Componenti di anteprima
 import CodePreview from './components/preview/CodePreview';
@@ -253,6 +254,9 @@ const AppContent = () => {
         break;
       case 'advanced-alv':
         FormComponent = AdvancedAlvForm;
+        break;
+      case 'flower':
+        FormComponent = FlowerForm;
         break;
       }
     

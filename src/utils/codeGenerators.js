@@ -1,12 +1,75 @@
 // Importa tutti i moduli necessari all'inizio del file
 import { generateAdvancedAlv } from './advancedAlvGenerator';
-
+import selectionScreenUtils from './selectionScreenGenerator';
 
 // Altri import esistenti...
 
 
 // Collezione di funzioni per generare codice ABAP
 // Ogni funzione accetta un oggetto con i dati del form e restituisce una stringa di codice
+export const generateFlowerTable = (formData) => {
+  const { tableName, structure, fields, additionalDetails } = formData;
+  
+  let code = `* Definizione Struttura per Tabella Fiori
+TYPES: BEGIN OF ${structure},`;
+  
+  // Aggiungi campi principali
+  fields.forEach((field, index) => {
+    let fieldLine = `  ${field.name} TYPE ${field.type}`;
+    
+    if (field.length) {
+      fieldLine += `(${field.length})`;
+    }
+    
+    if (field.primaryKey) {
+      fieldLine += ` KEY`;
+    }
+    
+    if (field.required) {
+      fieldLine += ` NOT NULL`;
+    }
+    
+    code += `\n${fieldLine}${index < fields.length - 1 ? ',' : ''}`;
+  });
+  
+  // Aggiungi dettagli aggiuntivi
+  if (additionalDetails && additionalDetails.length > 0) {
+    code += ',';
+    additionalDetails.forEach((detail, index) => {
+      code += `\n  ${detail.fieldName} TYPE ${detail.type}(${detail.length})`;
+      
+      if (index < additionalDetails.length - 1) {
+        code += ',';
+      }
+    });
+  }
+  
+  code += `\nEND OF ${structure}.
+
+* Definizione Tabella Database
+TABLES: ${tableName}.
+
+* Selezione dati
+START-OF-SELECTION.
+  SELECT * FROM ${tableName}
+    INTO TABLE @DATA(lt_flowers).
+
+  " Elabora i dati dei fiori
+  LOOP AT lt_flowers ASSIGNING FIELD-SYMBOL(<fs_flower>).
+    " Logica di elaborazione
+    WRITE: / <fs_flower>-name, <fs_flower>-color.
+  ENDLOOP.`;
+  
+  return code;
+};
+
+// Aggiungi alla mappa dei generatori in codeGenerators.js
+const generators = {
+  // ... altri generatori
+  'flower-table': generateFlowerTable
+};
+
+
 
 // Gestione generica di un qualsiasi costrutto
 export const generateGeneric = (formData) => {
@@ -732,7 +795,6 @@ export const generateClass = (formData) => {
   const { 
     name, 
     definition, 
-    visibility, 
     superclass, 
     interfaces,
     attributes = [],
@@ -1066,7 +1128,8 @@ export const generateInterface = (formData) => {
       'alv-grid': generateAlvGrid,
       'bapi-call': generateBapiCall,
       'advanced-alv': generateAdvancedAlv,
-   'selection-screen': selectionScreenGenerator.generateSelectionScreen
+      'selection-screen': selectionScreenUtils.generateSelectionScreen,
+      'flower': generateFlowerTable
     };
     
     if (generators[type]) {
