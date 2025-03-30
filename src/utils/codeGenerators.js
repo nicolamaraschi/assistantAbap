@@ -77,7 +77,7 @@ ENDCASE.`;
   return code;
 };
   
- // LOOP AT migliorato con GROUP BY e REFERENCE INTO
+// LOOP AT migliorato con tutte le nuove funzionalità
 export const generateLoopAt = (formData) => {
   const { 
     table, 
@@ -86,27 +86,58 @@ export const generateLoopAt = (formData) => {
     content, 
     useAssigning, 
     addIndex,
-    useGroupBy = false,       // Nuovo parametro
-    groupByField = '',        // Nuovo parametro
-    groupByOrder = 'ASCENDING', // Nuovo parametro
-    useReferenceInto = false,  // Nuovo parametro
-    indexFrom = 1,             // Nuovo parametro
-    indexTo = 10               // Nuovo parametro
+    useGroupBy,
+    groupByField,
+    groupByOrder,
+    useReferenceInto,
+    indexFrom,
+    indexTo,
+    useTableMode,        // Nuovo: LOOP AT IN TABLE MODE
+    useRange,            // Nuovo: LOOP AT con RANGE
+    rangeVariable,
+    useFilter,           // Nuovo: LOOP AT con FILTER CONDITIONS
+    filterCondition,
+    useTransporting,     // Nuovo: LOOP AT con TRANSPORTING
+    transportingFields,
+    useNested,           // Nuovo: supporto per tabelle annidate
+    nestedTable,
+    nestedVariable,
+    nestedContent,
+    useUpTo,             // Nuovo: UP TO n ROWS
+    upToRows
   } = formData;
   
   let code = `LOOP AT ${table}`;
   
-  if (whereCondition) {
+  // Aggiungi IN TABLE MODE se selezionato
+  if (useTableMode) {
+    code += ` IN TABLE MODE`;
+  }
+  
+  // Aggiungi FILTER se selezionato
+  if (useFilter && filterCondition) {
+    code += ` FILTER ( ${filterCondition} )`;
+  }
+  
+  // Aggiungi RANGE se selezionato
+  if (useRange && rangeVariable) {
+    code += ` IN ${rangeVariable}`;
+  }
+  
+  // Aggiungi WHERE se presente e non si usano FILTER o RANGE
+  if (whereCondition && !useFilter && !useRange) {
     code += ` WHERE ${whereCondition}`;
   }
   
   // Aggiungi GROUP BY se richiesto
   if (useGroupBy && groupByField) {
-    code += `
-  GROUP BY ${groupByField}
-  ${groupByOrder}`;
+    code += `\n  GROUP BY ${groupByField}`;
+    if (groupByOrder) {
+      code += `\n  ${groupByOrder}`;
+    }
   }
   
+  // Scegli tra INTO, REFERENCE INTO o ASSIGNING
   if (useAssigning) {
     code += ` ASSIGNING FIELD-SYMBOL(<${variable}>)`;
   } else if (useReferenceInto) {
@@ -115,18 +146,39 @@ export const generateLoopAt = (formData) => {
     code += ` INTO ${variable}`;
   }
   
+  // Aggiungi TRANSPORTING se richiesto
+  if (useTransporting && transportingFields) {
+    code += `\n  TRANSPORTING ${transportingFields}`;
+  }
+  
+  // Aggiungi FROM/TO se richiesto
   if (addIndex) {
     code += ` FROM ${indexFrom} TO ${indexTo}`;
   }
   
-  code += `.
-  ${content}
-ENDLOOP.`;
+  // Aggiungi UP TO n ROWS se richiesto
+  if (useUpTo && upToRows) {
+    code += `\n  UP TO ${upToRows} ROWS`;
+  }
+  
+  code += `.`;
+  
+  // Aggiungi il contenuto del loop
+  code += `\n  ${content}`;
+  
+  // Aggiungi un loop annidato se richiesto
+  if (useNested && nestedTable && nestedVariable) {
+    code += `\n\n  LOOP AT ${nestedTable} INTO ${nestedVariable}.`;
+    code += `\n    ${nestedContent}`;
+    code += `\n  ENDLOOP.`;
+  }
+  
+  code += `\nENDLOOP.`;
   
   return code;
 };
 
-  
+
   // DO-ENDDO
   export const generateDoEnddo = (formData) => {
     const { times, condition, content, addExitAt } = formData;

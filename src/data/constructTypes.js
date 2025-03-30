@@ -27,7 +27,8 @@ const constructTypes = [
       { id: "structure", name: "STRUCTURE" },
       { id: "field-symbol", name: "FIELD-SYMBOL" },
       { id: "internal-table", name: "INTERNAL TABLE" },
-      { id: "data-declaration", name: "DATA Declaration" }
+      { id: "data-declaration", name: "DATA Declaration" },
+      { id: "selection-screen", name: "Selection Screen" }
     ]
   },
   {
@@ -53,6 +54,7 @@ const constructTypes = [
       { id: "bdc-session", name: "BDC Session" },
       { id: "alv-grid", name: "ALV Grid" },
       { id: "smartform", name: "Smartform" },
+      { id: "advanced-alv", name: "ALV Grid Avanzato" },
       { id: "bapi-call", name: "BAPI Call" }
     ]
   }

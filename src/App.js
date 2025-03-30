@@ -40,6 +40,8 @@ import MethodDefinitionForm from './components/forms/MethodDefinitionForm';
 import AlvGridForm from './components/forms/AlvGridForm';
 import BapiCallForm from './components/forms/BapiCallForm';
 import BreakpointAnalyzer from './components/debug/BreakpointAnalyzer';
+import SelectionScreenForm from './components/forms/SelectionScreenForm';
+import AdvancedAlvForm from './components/forms/AdvancedAlvForm';
 
 // Componenti di anteprima
 import CodePreview from './components/preview/CodePreview';
@@ -246,7 +248,13 @@ const AppContent = () => {
       default:
         FormComponent = GenericForm;
         break;
-    }
+      case 'selection-screen':
+        FormComponent = SelectionScreenForm;
+        break;
+      case 'advanced-alv':
+        FormComponent = AdvancedAlvForm;
+        break;
+      }
     
     return (
       <>
