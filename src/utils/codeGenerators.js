@@ -393,27 +393,190 @@ ${name} = VALUE #(
 };
 
   
-  // DATA Declaration
-  export const generateDataDeclaration = (formData) => {
-    const { variables } = formData;
+  // Funzione migliorata per generare dichiarazioni DATA in ABAP
+export const generateDataDeclaration = (formData) => {
+  const { variables } = formData;
+  
+  if (!variables || variables.length === 0) {
+    return '* Nessuna variabile definita';
+  }
+  
+  // Raggruppa le variabili per tipo per una dichiarazione più compatta
+  const groupedVars = {};
+  
+  variables.forEach(variable => {
+    // Costruisci il tipo completo
+    let fullType = variable.type;
     
-    let code = `DATA: `;
+    // Aggiungi lunghezza/decimali per i tipi che li supportano
+    if ((variable.type === 'C' || variable.type === 'N' || variable.type === 'X') && variable.length) {
+      fullType = `${variable.type}(${variable.length})`;
+    } else if (variable.type === 'P' && variable.length) {
+      const decimals = variable.decimals || '0';
+      fullType = `${variable.type}(${variable.length}.${decimals})`;
+    }
     
-    const declarations = variables.map(variable => {
-      let declaration = `${variable.name} TYPE ${variable.type}`;
+    // Aggiungi dettagli tabella se è una tabella
+    if (variable.isTable) {
+      fullType = `${variable.tableType} OF ${variable.tableOf} WITH ${variable.keyType}`;
+    }
+    
+    // Aggiungi REF TO se è un riferimento
+    if (variable.isReference && !fullType.startsWith('REF TO')) {
+      fullType = `REF TO ${fullType}`;
+    }
+    
+    // Chiave del gruppo (tipo + valore iniziale, se presente)
+    const initialValuePart = variable.initialValue ? ` VALUE ${variable.initialValue}` : '';
+    const groupKey = `${fullType}${initialValuePart}`;
+    
+    if (!groupedVars[groupKey]) {
+      groupedVars[groupKey] = {
+        type: fullType,
+        initialValue: variable.initialValue,
+        names: []
+      };
+    }
+    
+    groupedVars[groupKey].names.push(variable.name);
+  });
+  
+  // Costruisci il codice ABAP
+  let code = 'DATA:';
+  
+  // Formatta ogni gruppo
+  const typeGroups = Object.values(groupedVars);
+  typeGroups.forEach((group, index) => {
+    const isLast = index === typeGroups.length - 1;
+    
+    code += `\n  ${group.names.join(', ')} TYPE ${group.type}`;
+    
+    if (group.initialValue) {
+      code += ` VALUE ${group.initialValue}`;
+    }
+    
+    code += isLast ? '.' : ',';
+  });
+  
+  return code;
+};
+
+// Esempio di funzione per generare dichiarazioni TYPE
+export const generateTypeDeclaration = (formData) => {
+  const { types } = formData;
+  
+  if (!types || types.length === 0) {
+    return '* Nessun tipo definito';
+  }
+  
+  let code = 'TYPES:';
+  
+  types.forEach((type, index) => {
+    const isLast = index === types.length - 1;
+    
+    code += `\n  ${type.name} TYPE ${type.type}`;
+    
+    code += isLast ? '.' : ',';
+  });
+  
+  return code;
+};
+
+// Versione alternativa che può essere combinata con le dichiarazioni di tipo
+export const generateDataDeclarationAlternative = (formData) => {
+  const { variables, useTypes, types } = formData;
+  
+  if ((!variables || variables.length === 0) && (!useTypes || !types || types.length === 0)) {
+    return '* Nessuna dichiarazione definita';
+  }
+  
+  let code = '';
+  
+  // Aggiungi dichiarazioni di tipo se necessario
+  if (useTypes && types && types.length > 0) {
+    code += 'TYPES:';
+    
+    types.forEach((type, index) => {
+      const isLast = index === types.length - 1 && (!variables || variables.length === 0);
       
-      if (variable.initialValue) {
-        declaration += ` VALUE ${variable.initialValue}`;
-      }
+      code += `\n  ${type.name} TYPE ${type.type}`;
       
-      return declaration;
+      code += isLast ? '.' : ',';
     });
     
-    code += declarations.join(',\n      ');
-    code += '.';
+    // Aggiungi un separatore se ci sono anche variabili
+    if (variables && variables.length > 0) {
+      code += '\n\n';
+    }
+  }
+  
+  // Aggiungi dichiarazioni di variabili
+  if (variables && variables.length > 0) {
+    code += 'DATA:';
     
-    return code;
-  };
+    // Raggruppa le variabili per tipo
+    const groupedVars = {};
+    
+    variables.forEach(variable => {
+      // Costruisci il tipo completo
+      let fullType = variable.type;
+      
+      // Aggiungi lunghezza/decimali per i tipi che li supportano
+      if ((variable.type === 'C' || variable.type === 'N' || variable.type === 'X') && variable.length) {
+        fullType = `${variable.type}(${variable.length})`;
+      } else if (variable.type === 'P' && variable.length) {
+        const decimals = variable.decimals || '0';
+        fullType = `${variable.type}(${variable.length}.${decimals})`;
+      }
+      
+      // Aggiungi dettagli tabella se è una tabella
+      if (variable.isTable) {
+        if (fullType.includes('TABLE OF')) {
+          // Il tipo è già una dichiarazione di tabella
+          fullType = `${fullType} WITH ${variable.keyType}`;
+        } else {
+          // Costruisci la dichiarazione di tabella
+          fullType = `${variable.tableType} OF ${fullType} WITH ${variable.keyType}`;
+        }
+      }
+      
+      // Aggiungi REF TO se è un riferimento
+      if (variable.isReference && !fullType.startsWith('REF TO')) {
+        fullType = `REF TO ${fullType}`;
+      }
+      
+      // Chiave del gruppo (tipo + valore iniziale, se presente)
+      const initialValuePart = variable.initialValue ? ` VALUE ${variable.initialValue}` : '';
+      const groupKey = `${fullType}${initialValuePart}`;
+      
+      if (!groupedVars[groupKey]) {
+        groupedVars[groupKey] = {
+          type: fullType,
+          initialValue: variable.initialValue,
+          names: []
+        };
+      }
+      
+      groupedVars[groupKey].names.push(variable.name);
+    });
+    
+    // Formatta ogni gruppo
+    const typeGroups = Object.values(groupedVars);
+    typeGroups.forEach((group, index) => {
+      const isLast = index === typeGroups.length - 1;
+      
+      code += `\n  ${group.names.join(', ')} TYPE ${group.type}`;
+      
+      if (group.initialValue) {
+        code += ` VALUE ${group.initialValue}`;
+      }
+      
+      code += isLast ? '.' : ',';
+    });
+  }
+  
+  return code;
+};
   
   // TRY-CATCH migliorato con supporto RESUME
 export const generateTryCatch = (formData) => {
@@ -652,42 +815,59 @@ ENDCLASS.`;
   return code;
 };
   
-  // INTERFACE
-  export const generateInterface = (formData) => {
-    const { name, methods } = formData;
-    
-    let code = `INTERFACE ${name}.\n`;
-    
-    if (methods && methods.length > 0) {
-      code += `  METHODS:\n`;
-      
-      const methodDeclarations = methods.map(method => {
-        let methodDecl = `    ${method.name}`;
-        
-        if (method.importing) {
-          methodDecl += `\n      IMPORTING ${method.importing}`;
-        }
-        
-        if (method.exporting) {
-          methodDecl += `\n      EXPORTING ${method.exporting}`;
-        }
-        
-        if (method.returning) {
-          methodDecl += `\n      RETURNING VALUE(${method.returning.name}) TYPE ${method.returning.type}`;
-        }
-        
-        return methodDecl;
-      });
-      
-      code += methodDeclarations.join(',\n\n');
-      code += `.`;
-    }
-    
-    code += `\nENDINTERFACE.`;
-    
-    return code;
-  };
+  // Funzione per generare codice INTERFACE migliorato
+export const generateInterface = (formData) => {
+  const { name, constants = [], methods = [] } = formData;
   
+  let code = `INTERFACE ${name}.
+`;
+  
+  // Aggiunta delle costanti
+  if (constants && constants.length > 0) {
+    code += `
+  CONSTANTS:
+`;
+    
+    const constantDeclarations = constants.map((constant, index) => {
+      return `    ${constant.name} TYPE ${constant.type} VALUE ${constant.value}` + 
+             (index < constants.length - 1 ? ',' : '.');
+    });
+    
+    code += constantDeclarations.join('\n');
+    code += '\n';
+  }
+  
+  // Aggiunta dei metodi
+  if (methods && methods.length > 0) {
+    code += `
+  METHODS:
+`;
+    
+    const methodDeclarations = methods.map((method, index) => {
+      let methodDecl = `    ${method.name}`;
+      
+      if (method.importing) {
+        methodDecl += `\n      IMPORTING ${method.importing}`;
+      }
+      
+      if (method.exporting) {
+        methodDecl += `\n      EXPORTING ${method.exporting}`;
+      }
+      
+      if (method.raising) {
+        methodDecl += `\n      RAISING ${method.raising}`;
+      }
+      
+      return methodDecl + (index < methods.length - 1 ? ',' : '.');
+    });
+    
+    code += methodDeclarations.join('\n\n');
+  }
+  
+  code += `\nENDINTERFACE.`;
+  
+  return code;
+};
   // Method Definition
   export const generateMethodDefinition = (formData) => {
     const { className, methodName, importing, exporting, returning, raising, content } = formData;

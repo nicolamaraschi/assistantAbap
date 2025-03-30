@@ -19,6 +19,9 @@ const InterfaceForm = ({ onGenerate }) => {
     ]
   });
   
+  // Stato per la tab attiva (constants o methods)
+  const [activeTab, setActiveTab] = useState('constants');
+  
   // Accesso al context
   const { updateFormState, formState } = useAbap();
   
@@ -122,107 +125,119 @@ const InterfaceForm = ({ onGenerate }) => {
       
       <TabsContainer>
         <TabHeader>
-          <TabButton active={true}>Costanti</TabButton>
-          <TabButton>Metodi</TabButton>
+          <TabButton 
+            active={activeTab === 'constants'} 
+            onClick={() => setActiveTab('constants')}
+          >
+            Costanti
+          </TabButton>
+          <TabButton 
+            active={activeTab === 'methods'} 
+            onClick={() => setActiveTab('methods')}
+          >
+            Metodi
+          </TabButton>
         </TabHeader>
         
         <TabContent>
-          <FormGroup label="Costanti:">
-            {formData.constants.map(constant => (
-              <ConstantItem key={constant.id}>
-                <ConstantHeader>
-                  <ConstantTitle>Costante {constant.id}</ConstantTitle>
-                  <Button
-                    variant="text"
-                    size="small"
-                    icon={<FiTrash2 />}
-                    onClick={() => handleRemoveConstant(constant.id)}
-                  />
-                </ConstantHeader>
-                <FormGroup label="Nome:">
-                  <ControlledInput type="text"
-                    value={constant.name}
-                    onChange={(e) => handleConstantChange(constant.id, 'name', e.target.value)}
-                  />
-                </FormGroup>
-                <FormGroup label="Tipo:">
-                  <ControlledInput type="text"
-                    value={constant.type}
-                    onChange={(e) => handleConstantChange(constant.id, 'type', e.target.value)}
-                  />
-                </FormGroup>
-                <FormGroup label="Valore:">
-                  <ControlledInput type="text"
-                    value={constant.value}
-                    onChange={(e) => handleConstantChange(constant.id, 'value', e.target.value)}
-                  />
-                </FormGroup>
-              </ConstantItem>
-            ))}
-            
-            <Button
-              variant="outline"
-              size="small"
-              icon={<FiPlus />}
-              onClick={handleAddConstant}
-            >
-              Aggiungi costante
-            </Button>
-          </FormGroup>
-          
-          <FormGroup label="Metodi:">
-            {formData.methods.map(method => (
-              <MethodItem key={method.id}>
-                <MethodHeader>
-                  <MethodTitle>Metodo {method.id}</MethodTitle>
-                  <Button
-                    variant="text"
-                    size="small"
-                    icon={<FiTrash2 />}
-                    onClick={() => handleRemoveMethod(method.id)}
-                  />
-                </MethodHeader>
-                <FormGroup label="Nome:">
-                  <ControlledInput type="text"
-                    value={method.name}
-                    onChange={(e) => handleMethodChange(method.id, 'name', e.target.value)}
-                  />
-                </FormGroup>
-                <FormGroup label="Parametri IMPORTING:">
-                  <ControlledTextarea
-                    value={method.importing}
-                    onChange={(e) => handleMethodChange(method.id, 'importing', e.target.value)}
-                    rows={2}
-                    placeholder="es. iv_param1 TYPE string"
-                  />
-                </FormGroup>
-                <FormGroup label="Parametri EXPORTING:">
-                  <ControlledTextarea
-                    value={method.exporting}
-                    onChange={(e) => handleMethodChange(method.id, 'exporting', e.target.value)}
-                    rows={2}
-                    placeholder="es. ev_result TYPE string"
-                  />
-                </FormGroup>
-                <FormGroup label="RAISING:">
-                  <ControlledInput type="text"
-                    value={method.raising}
-                    onChange={(e) => handleMethodChange(method.id, 'raising', e.target.value)}
-                    placeholder="es. cx_sy_zerodivide cx_sy_conversion_error"
-                  />
-                </FormGroup>
-              </MethodItem>
-            ))}
-            
-            <Button
-              variant="outline"
-              size="small"
-              icon={<FiPlus />}
-              onClick={handleAddMethod}
-            >
-              Aggiungi metodo
-            </Button>
-          </FormGroup>
+          {activeTab === 'constants' ? (
+            <FormGroup label="Costanti:">
+              {formData.constants.map(constant => (
+                <ConstantItem key={constant.id}>
+                  <ConstantHeader>
+                    <ConstantTitle>Costante {constant.id}</ConstantTitle>
+                    <Button
+                      variant="text"
+                      size="small"
+                      icon={<FiTrash2 />}
+                      onClick={() => handleRemoveConstant(constant.id)}
+                    />
+                  </ConstantHeader>
+                  <FormGroup label="Nome:">
+                    <ControlledInput type="text"
+                      value={constant.name}
+                      onChange={(e) => handleConstantChange(constant.id, 'name', e.target.value)}
+                    />
+                  </FormGroup>
+                  <FormGroup label="Tipo:">
+                    <ControlledInput type="text"
+                      value={constant.type}
+                      onChange={(e) => handleConstantChange(constant.id, 'type', e.target.value)}
+                    />
+                  </FormGroup>
+                  <FormGroup label="Valore:">
+                    <ControlledInput type="text"
+                      value={constant.value}
+                      onChange={(e) => handleConstantChange(constant.id, 'value', e.target.value)}
+                    />
+                  </FormGroup>
+                </ConstantItem>
+              ))}
+              
+              <Button
+                variant="outline"
+                size="small"
+                icon={<FiPlus />}
+                onClick={handleAddConstant}
+              >
+                Aggiungi costante
+              </Button>
+            </FormGroup>
+          ) : (
+            <FormGroup label="Metodi:">
+              {formData.methods.map(method => (
+                <MethodItem key={method.id}>
+                  <MethodHeader>
+                    <MethodTitle>Metodo {method.id}</MethodTitle>
+                    <Button
+                      variant="text"
+                      size="small"
+                      icon={<FiTrash2 />}
+                      onClick={() => handleRemoveMethod(method.id)}
+                    />
+                  </MethodHeader>
+                  <FormGroup label="Nome:">
+                    <ControlledInput type="text"
+                      value={method.name}
+                      onChange={(e) => handleMethodChange(method.id, 'name', e.target.value)}
+                    />
+                  </FormGroup>
+                  <FormGroup label="Parametri IMPORTING:">
+                    <ControlledTextarea
+                      value={method.importing}
+                      onChange={(e) => handleMethodChange(method.id, 'importing', e.target.value)}
+                      rows={2}
+                      placeholder="es. iv_param1 TYPE string"
+                    />
+                  </FormGroup>
+                  <FormGroup label="Parametri EXPORTING:">
+                    <ControlledTextarea
+                      value={method.exporting}
+                      onChange={(e) => handleMethodChange(method.id, 'exporting', e.target.value)}
+                      rows={2}
+                      placeholder="es. ev_result TYPE string"
+                    />
+                  </FormGroup>
+                  <FormGroup label="RAISING:">
+                    <ControlledInput type="text"
+                      value={method.raising}
+                      onChange={(e) => handleMethodChange(method.id, 'raising', e.target.value)}
+                      placeholder="es. cx_sy_zerodivide cx_sy_conversion_error"
+                    />
+                  </FormGroup>
+                </MethodItem>
+              ))}
+              
+              <Button
+                variant="outline"
+                size="small"
+                icon={<FiPlus />}
+                onClick={handleAddMethod}
+              >
+                Aggiungi metodo
+              </Button>
+            </FormGroup>
+          )}
         </TabContent>
       </TabsContainer>
       
