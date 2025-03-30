@@ -32,17 +32,12 @@ const constructTypes = [
     ]
   },
   {
-    group: "Strutture Dati",
+    group: "UI5 & Fiori",
     items: [
-      // ... altri elementi esistenti
-      { id: "flower", name: "Tabella Fiori" }
-    ]
-  },
-  {
-    group: "Report Speciali",
-    items: [
-      // ... altri elementi esistenti
-      { id: "flower", name: "Report Fiori" }
+      { id: "flower", name: "SAP Fiori App" },
+      { id: "alv-grid", name: "ALV Grid" },
+      { id: "advanced-alv", name: "ALV Grid Avanzato" },
+      { id: "bapi-call", name: "BAPI Call" }
     ]
   },
   {
@@ -66,10 +61,7 @@ const constructTypes = [
     group: "Altri Costrutti",
     items: [
       { id: "bdc-session", name: "BDC Session" },
-      { id: "alv-grid", name: "ALV Grid" },
-      { id: "smartform", name: "Smartform" },
-      { id: "advanced-alv", name: "ALV Grid Avanzato" },
-      { id: "bapi-call", name: "BAPI Call" }
+      { id: "smartform", name: "Smartform" }
     ]
   }
 ];

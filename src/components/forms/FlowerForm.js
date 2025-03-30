@@ -2,61 +2,57 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import FormGroup from '../common/FormGroup';
 import Button from '../common/Button';
-import { FiPlus, FiTrash2 } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { useAbap } from '../../context/AbapContext';
 import ControlledInput from '../common/ControlledInput';
 import ControlledTextarea from '../common/ControlledTextarea';
 
-const FlowerForm = ({ onGenerate }) => {
+/**
+ * Form per la generazione di applicazioni SAP Fiori
+ * Permette la configurazione di vari aspetti dell'applicazione:
+ * - Informazioni base (titolo, tipo, ID)
+ * - Configurazione OData (servizio, entity set, navigazione)
+ * - Interfaccia utente (layout, controlli, azioni)
+ * - Impostazioni avanzate (bozze, autenticazione, internazionalizzazione)
+ */
+const FioriForm = ({ onGenerate }) => {
   // Stato locale del form
   const [formData, setFormData] = useState({
-    operationType: 'alv-report', // Tipo di operazione ABAP
-    flowerType: '', // Tipo di fiore specifico
-    outputType: 'DISPLAY', // Tipo di output
-    selectionOptions: [
-      { 
-        id: 1, 
-        name: 's_color', 
-        label: 'Colore Fiore', 
-        type: 'color'
-      }
+    appType: 'transactional',
+    appTitle: 'My Fiori App',
+    appDescription: 'SAP Fiori Application',
+    appId: 'z.myfioriapp',
+    oDataService: 'ZMY_ODATA_SERVICE',
+    entitySet: 'MyEntitySet',
+    navigationProperty: 'ID',
+    includeAnnotations: true,
+    includeAnalytics: false,
+    includeCustomActions: false,
+    customActions: [
+      { id: 1, name: 'export', label: 'Export', icon: 'sap-icon://excel-attachment' }
     ],
-    sortingOptions: [
-      { 
-        id: 1, 
-        field: 'name', 
-        direction: 'ASCENDING' 
-      }
-    ],
-    reportTitle: 'ZFLOWER_REPORT',
-    additionalFeatures: {
-      includeStatistics: false,
-      includeVariantSave: true,
-      highlightRarePlants: false
-    }
+    includeDraftHandling: false,
+    includeFlexibleColumnLayout: false,
+    useSmartControls: true,
+    addAuthentication: true,
+    i18nSupport: true,
+    supportedLanguages: ['EN', 'DE']
   });
   
-  // Opzioni per il tipo di operazione
-  const operationTypes = [
-    { value: 'alv-report', label: 'Report ALV Fiori' },
-    { value: 'select', label: 'Selezione Fiori' },
-    { value: 'count', label: 'Conteggio Fiori' },
-    { value: 'export', label: 'Esportazione Dati' }
-  ];
-
-  // Tipi di output
-  const outputTypes = [
-    { value: 'DISPLAY', label: 'Visualizzazione' },
-    { value: 'DOWNLOAD', label: 'Download' },
-    { value: 'EMAIL', label: 'Invio Email' }
-  ];
+  // Stato per le sezioni collassabili
+  const [expandedSections, setExpandedSections] = useState({
+    basic: true,
+    odata: true,
+    ui: false,
+    advanced: false
+  });
   
-  // Accesso al context
+      // Accesso al context
   const { updateFormState, formState } = useAbap();
   
   // Carica lo stato salvato nel contesto
   useEffect(() => {
-    if (formState['flower']) {
+    if (formState['flower']) { // 'flower' è l'ID usato per SAP Fiori nel sistema
       setFormData(formState['flower']);
     }
   }, [formState]);
@@ -75,72 +71,52 @@ const FlowerForm = ({ onGenerate }) => {
     }));
   };
   
-  // Aggiunge una nuova opzione di selezione
-  const handleAddSelectionOption = () => {
-    const newId = Math.max(0, ...formData.selectionOptions.map(o => o.id)) + 1;
+  // Gestisce il cambiamento dei campi annidati
+  const handleNestedChange = (section, field, value) => {
     setFormData(prevData => ({
       ...prevData,
-      selectionOptions: [
-        ...prevData.selectionOptions,
-        { 
-          id: newId, 
-          name: `s_opt${newId}`, 
-          label: `Opzione ${newId}`,
-          type: 'color'
-        }
+      [section]: {
+        ...prevData[section],
+        [field]: value
+      }
+    }));
+  };
+  
+  // Gestisce l'aggiunta di una custom action
+  const handleAddCustomAction = () => {
+    const newId = Math.max(0, ...formData.customActions.map(a => a.id)) + 1;
+    setFormData(prevData => ({
+      ...prevData,
+      customActions: [
+        ...prevData.customActions,
+        { id: newId, name: `action${newId}`, label: `Action ${newId}`, icon: 'sap-icon://action' }
       ]
     }));
   };
   
-  // Rimuove un'opzione di selezione
-  const handleRemoveSelectionOption = (id) => {
+  // Gestisce la rimozione di una custom action
+  const handleRemoveCustomAction = (id) => {
     setFormData(prevData => ({
       ...prevData,
-      selectionOptions: prevData.selectionOptions.filter(o => o.id !== id)
+      customActions: prevData.customActions.filter(a => a.id !== id)
     }));
   };
   
-  // Modifica un'opzione di selezione
-  const handleSelectionOptionChange = (id, field, value) => {
+  // Gestisce il cambiamento di una custom action
+  const handleCustomActionChange = (id, field, value) => {
     setFormData(prevData => ({
       ...prevData,
-      selectionOptions: prevData.selectionOptions.map(o => 
-        o.id === id ? { ...o, [field]: value } : o
+      customActions: prevData.customActions.map(action => 
+        action.id === id ? { ...action, [field]: value } : action
       )
     }));
   };
   
-  // Aggiunge un'opzione di ordinamento
-  const handleAddSortingOption = () => {
-    const newId = Math.max(0, ...formData.sortingOptions.map(o => o.id)) + 1;
-    setFormData(prevData => ({
-      ...prevData,
-      sortingOptions: [
-        ...prevData.sortingOptions,
-        { 
-          id: newId, 
-          field: 'name', 
-          direction: 'ASCENDING' 
-        }
-      ]
-    }));
-  };
-  
-  // Rimuove un'opzione di ordinamento
-  const handleRemoveSortingOption = (id) => {
-    setFormData(prevData => ({
-      ...prevData,
-      sortingOptions: prevData.sortingOptions.filter(o => o.id !== id)
-    }));
-  };
-  
-  // Modifica un'opzione di ordinamento
-  const handleSortingOptionChange = (id, field, value) => {
-    setFormData(prevData => ({
-      ...prevData,
-      sortingOptions: prevData.sortingOptions.map(o => 
-        o.id === id ? { ...o, [field]: value } : o
-      )
+  // Toggle espansione/collasso sezioni
+  const toggleSection = (section) => {
+    setExpandedSections(prevState => ({
+      ...prevState,
+      [section]: !prevState[section]
     }));
   };
   
@@ -153,211 +129,283 @@ const FlowerForm = ({ onGenerate }) => {
   
   return (
     <FormContainer>
-      <FormGroup label="Tipo di Operazione:">
-        <select
-          name="operationType"
-          value={formData.operationType}
-          onChange={handleChange}
-        >
-          {operationTypes.map(type => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </select>
-      </FormGroup>
+      <FormHeader>
+        <h3>Generatore di Applicazioni SAP Fiori</h3>
+        <FormHint>Configura le opzioni per generare un'applicazione SAP Fiori basata su UI5</FormHint>
+      </FormHeader>
       
-      <FormGroup label="Tipo di Fiore:">
-        <ControlledInput 
-          type="text"
-          name="flowerType"
-          value={formData.flowerType}
-          onChange={handleChange}
-          placeholder="es. Rosa, Tulipano, Orchidea"
-        />
-      </FormGroup>
+      {/* Sezione Informazioni Base */}
+      <SectionHeader onClick={() => toggleSection('basic')}>
+        <h4>Informazioni di Base</h4>
+        {expandedSections.basic ? <FiChevronUp /> : <FiChevronDown />}
+      </SectionHeader>
       
-      <FormGroup label="Titolo Report:">
-        <ControlledInput 
-          type="text"
-          name="reportTitle"
-          value={formData.reportTitle}
-          onChange={handleChange}
-        />
-      </FormGroup>
-      
-      <FormGroup label="Tipo di Output:">
-        <select
-          name="outputType"
-          value={formData.outputType}
-          onChange={handleChange}
-        >
-          {outputTypes.map(type => (
-            <option key={type.value} value={type.value}>
-              {type.label}
-            </option>
-          ))}
-        </select>
-      </FormGroup>
-      
-      <FormGroup label="Opzioni di Selezione:">
-        {formData.selectionOptions.map(option => (
-          <SelectionOptionItem key={option.id}>
-            <OptionHeader>
-              <Button
-                variant="text"
-                size="small"
-                icon={<FiTrash2 />}
-                onClick={() => handleRemoveSelectionOption(option.id)}
-                disabled={formData.selectionOptions.length <= 1}
-              />
-            </OptionHeader>
-            
-            <TwoColumnsGrid>
-              <FormGroup label="Nome Opzione:">
-                <ControlledInput 
-                  type="text"
-                  value={option.name}
-                  onChange={(e) => handleSelectionOptionChange(option.id, 'name', e.target.value)}
-                />
-              </FormGroup>
-              
-              <FormGroup label="Etichetta:">
-                <ControlledInput 
-                  type="text"
-                  value={option.label}
-                  onChange={(e) => handleSelectionOptionChange(option.id, 'label', e.target.value)}
-                />
-              </FormGroup>
-              
-              <FormGroup label="Tipo:">
-                <select
-                  value={option.type}
-                  onChange={(e) => handleSelectionOptionChange(option.id, 'type', e.target.value)}
-                >
-                  <option value="color">Colore</option>
-                  <option value="species">Specie</option>
-                  <option value="date">Data Fioritura</option>
-                  <option value="region">Regione</option>
-                </select>
-              </FormGroup>
-            </TwoColumnsGrid>
-          </SelectionOptionItem>
-        ))}
-        
-        <Button
-          variant="outline"
-          size="small"
-          icon={<FiPlus />}
-          onClick={handleAddSelectionOption}
-        >
-          Aggiungi Opzione di Selezione
-        </Button>
-      </FormGroup>
-      
-      <FormGroup label="Opzioni di Ordinamento:">
-        {formData.sortingOptions.map(option => (
-          <SortingOptionItem key={option.id}>
-            <OptionHeader>
-              <Button
-                variant="text"
-                size="small"
-                icon={<FiTrash2 />}
-                onClick={() => handleRemoveSortingOption(option.id)}
-                disabled={formData.sortingOptions.length <= 1}
-              />
-            </OptionHeader>
-            
-            <TwoColumnsGrid>
-              <FormGroup label="Campo:">
-                <select
-                  value={option.field}
-                  onChange={(e) => handleSortingOptionChange(option.id, 'field', e.target.value)}
-                >
-                  <option value="name">Nome</option>
-                  <option value="color">Colore</option>
-                  <option value="blooming_date">Data Fioritura</option>
-                  <option value="region">Regione</option>
-                </select>
-              </FormGroup>
-              
-              <FormGroup label="Direzione:">
-                <select
-                  value={option.direction}
-                  onChange={(e) => handleSortingOptionChange(option.id, 'direction', e.target.value)}
-                >
-                  <option value="ASCENDING">Crescente</option>
-                  <option value="DESCENDING">Decrescente</option>
-                </select>
-              </FormGroup>
-            </TwoColumnsGrid>
-          </SortingOptionItem>
-        ))}
-        
-        <Button
-          variant="outline"
-          size="small"
-          icon={<FiPlus />}
-          onClick={handleAddSortingOption}
-        >
-          Aggiungi Opzione di Ordinamento
-        </Button>
-      </FormGroup>
-      
-      <FormGroup label="Funzionalità Aggiuntive:">
-        <OptionsFlex>
-          <FormGroup inline>
-            <input
-              type="checkbox"
-              name="additionalFeatures.includeStatistics"
-              checked={formData.additionalFeatures.includeStatistics}
-              onChange={(e) => setFormData(prevData => ({
-                ...prevData,
-                additionalFeatures: {
-                  ...prevData.additionalFeatures,
-                  includeStatistics: e.target.checked
-                }
-              }))}
-              id="includeStatistics"
+      {expandedSections.basic && (
+        <SectionContent>
+          <FormGroup label="Tipo di Applicazione:">
+            <select
+              name="appType"
+              value={formData.appType}
+              onChange={handleChange}
+            >
+              <option value="transactional">Transazionale (CRUD)</option>
+              <option value="analytical">Analitica</option>
+              <option value="factsheet">Scheda Informativa</option>
+              <option value="list">Elenco</option>
+            </select>
+          </FormGroup>
+
+          <FormGroup label="Titolo Applicazione:">
+            <ControlledInput
+              type="text"
+              name="appTitle"
+              value={formData.appTitle}
+              onChange={handleChange}
+              placeholder="Titolo visualizzato nell'app"
             />
-            <label htmlFor="includeStatistics">Includi Statistiche</label>
+          </FormGroup>
+          
+          <FormGroup label="Descrizione:">
+            <ControlledInput
+              type="text"
+              name="appDescription"
+              value={formData.appDescription}
+              onChange={handleChange}
+              placeholder="Breve descrizione dell'applicazione"
+            />
+          </FormGroup>
+          
+          <FormGroup label="ID Applicazione:">
+            <ControlledInput
+              type="text"
+              name="appId"
+              value={formData.appId}
+              onChange={handleChange}
+              placeholder="es. z.myfioriapp"
+            />
+          </FormGroup>
+        </SectionContent>
+      )}
+      
+      {/* Sezione OData */}
+      <SectionHeader onClick={() => toggleSection('odata')}>
+        <h4>Configurazione OData</h4>
+        {expandedSections.odata ? <FiChevronUp /> : <FiChevronDown />}
+      </SectionHeader>
+      
+      {expandedSections.odata && (
+        <SectionContent>
+          <FormGroup label="Servizio OData:">
+            <ControlledInput
+              type="text"
+              name="oDataService"
+              value={formData.oDataService}
+              onChange={handleChange}
+              placeholder="es. ZMY_ODATA_SERVICE"
+            />
+          </FormGroup>
+          
+          <FormGroup label="EntitySet:">
+            <ControlledInput
+              type="text"
+              name="entitySet"
+              value={formData.entitySet}
+              onChange={handleChange}
+              placeholder="es. Products"
+            />
+          </FormGroup>
+          
+          <FormGroup label="Proprietà di Navigazione (per dettaglio):">
+            <ControlledInput
+              type="text"
+              name="navigationProperty"
+              value={formData.navigationProperty}
+              onChange={handleChange}
+              placeholder="es. ID o ProductID"
+            />
+            <FormHint>Lascia vuoto se non è necessaria la navigazione al dettaglio</FormHint>
           </FormGroup>
           
           <FormGroup inline>
             <input
               type="checkbox"
-              name="additionalFeatures.includeVariantSave"
-              checked={formData.additionalFeatures.includeVariantSave}
-              onChange={(e) => setFormData(prevData => ({
-                ...prevData,
-                additionalFeatures: {
-                  ...prevData.additionalFeatures,
-                  includeVariantSave: e.target.checked
-                }
-              }))}
-              id="includeVariantSave"
+              name="includeAnnotations"
+              checked={formData.includeAnnotations}
+              onChange={handleChange}
+              id="includeAnnotations"
             />
-            <label htmlFor="includeVariantSave">Salvataggio Varianti</label>
+            <label htmlFor="includeAnnotations">Includi Annotazioni OData</label>
+            <FormHint>Le annotazioni definiscono aspetti di visualizzazione UI</FormHint>
+          </FormGroup>
+        </SectionContent>
+      )}
+
+      {/* Sezione UI */}
+      <SectionHeader onClick={() => toggleSection('ui')}>
+        <h4>Configurazione UI</h4>
+        {expandedSections.ui ? <FiChevronUp /> : <FiChevronDown />}
+      </SectionHeader>
+      
+      {expandedSections.ui && (
+        <SectionContent>
+          <FormGroup inline>
+            <input
+              type="checkbox"
+              name="useSmartControls"
+              checked={formData.useSmartControls}
+              onChange={handleChange}
+              id="useSmartControls"
+            />
+            <label htmlFor="useSmartControls">Usa Smart Controls (SmartTable, SmartForm)</label>
           </FormGroup>
           
           <FormGroup inline>
             <input
               type="checkbox"
-              name="additionalFeatures.highlightRarePlants"
-              checked={formData.additionalFeatures.highlightRarePlants}
-              onChange={(e) => setFormData(prevData => ({
-                ...prevData,
-                additionalFeatures: {
-                  ...prevData.additionalFeatures,
-                  highlightRarePlants: e.target.checked
-                }
-              }))}
-              id="highlightRarePlants"
+              name="includeFlexibleColumnLayout"
+              checked={formData.includeFlexibleColumnLayout}
+              onChange={handleChange}
+              id="includeFlexibleColumnLayout"
             />
-            <label htmlFor="highlightRarePlants">Evidenzia Piante Rare</label>
+            <label htmlFor="includeFlexibleColumnLayout">Usa Flexible Column Layout</label>
+            <FormHint>Layout a colonne flessibili in stile SAP Fiori 3</FormHint>
           </FormGroup>
-        </OptionsFlex>
-      </FormGroup>
+          
+          <FormGroup inline>
+            <input
+              type="checkbox"
+              name="includeAnalytics"
+              checked={formData.includeAnalytics}
+              onChange={handleChange}
+              id="includeAnalytics"
+            />
+            <label htmlFor="includeAnalytics">Includi Componenti Analitici</label>
+          </FormGroup>
+          
+          <FormGroup inline>
+            <input
+              type="checkbox"
+              name="includeCustomActions"
+              checked={formData.includeCustomActions}
+              onChange={handleChange}
+              id="includeCustomActions"
+            />
+            <label htmlFor="includeCustomActions">Aggiungi Azioni Personalizzate</label>
+          </FormGroup>
+          
+          {formData.includeCustomActions && (
+            <ActionsContainer>
+              {formData.customActions.map(action => (
+                <ActionItem key={action.id}>
+                  <ActionHeader>
+                    <ActionTitle>Azione {action.id}</ActionTitle>
+                    <Button
+                      variant="text"
+                      size="small"
+                      icon={<FiTrash2 />}
+                      onClick={() => handleRemoveCustomAction(action.id)}
+                    />
+                  </ActionHeader>
+                  
+                  <ActionGrid>
+                    <FormGroup label="Nome:">
+                      <ControlledInput
+                        type="text"
+                        value={action.name}
+                        onChange={(e) => handleCustomActionChange(action.id, 'name', e.target.value)}
+                      />
+                    </FormGroup>
+                    
+                    <FormGroup label="Etichetta:">
+                      <ControlledInput
+                        type="text"
+                        value={action.label}
+                        onChange={(e) => handleCustomActionChange(action.id, 'label', e.target.value)}
+                      />
+                    </FormGroup>
+                    
+                    <FormGroup label="Icona:">
+                      <ControlledInput
+                        type="text"
+                        value={action.icon}
+                        onChange={(e) => handleCustomActionChange(action.id, 'icon', e.target.value)}
+                        placeholder="es. sap-icon://action"
+                      />
+                    </FormGroup>
+                  </ActionGrid>
+                </ActionItem>
+              ))}
+              
+              <Button
+                variant="outline"
+                size="small"
+                icon={<FiPlus />}
+                onClick={handleAddCustomAction}
+              >
+                Aggiungi Azione
+              </Button>
+            </ActionsContainer>
+          )}
+        </SectionContent>
+      )}
+      
+      {/* Sezione Avanzata */}
+      <SectionHeader onClick={() => toggleSection('advanced')}>
+        <h4>Configurazione Avanzata</h4>
+        {expandedSections.advanced ? <FiChevronUp /> : <FiChevronDown />}
+      </SectionHeader>
+      
+      {expandedSections.advanced && (
+        <SectionContent>
+          <FormGroup inline>
+            <input
+              type="checkbox"
+              name="includeDraftHandling"
+              checked={formData.includeDraftHandling}
+              onChange={handleChange}
+              id="includeDraftHandling"
+            />
+            <label htmlFor="includeDraftHandling">Includi Gestione Bozze</label>
+            <FormHint>Per abilitare il salvataggio di bozze dei dati</FormHint>
+          </FormGroup>
+          
+          <FormGroup inline>
+            <input
+              type="checkbox"
+              name="addAuthentication"
+              checked={formData.addAuthentication}
+              onChange={handleChange}
+              id="addAuthentication"
+            />
+            <label htmlFor="addAuthentication">Aggiungi Autenticazione</label>
+          </FormGroup>
+          
+          <FormGroup inline>
+            <input
+              type="checkbox"
+              name="i18nSupport"
+              checked={formData.i18nSupport}
+              onChange={handleChange}
+              id="i18nSupport"
+            />
+            <label htmlFor="i18nSupport">Supporto Internazionalizzazione (i18n)</label>
+          </FormGroup>
+          
+          {formData.i18nSupport && (
+            <FormGroup label="Lingue Supportate:">
+              <ControlledInput
+                type="text"
+                value={formData.supportedLanguages.join(', ')}
+                onChange={(e) => setFormData({
+                  ...formData,
+                  supportedLanguages: e.target.value.split(',').map(lang => lang.trim())
+                })}
+                placeholder="es. EN, DE, IT, FR"
+              />
+            </FormGroup>
+          )}
+        </SectionContent>
+      )}
       
       <ButtonContainer>
         <Button 
@@ -365,7 +413,7 @@ const FlowerForm = ({ onGenerate }) => {
           onClick={handleGenerate}
           fullWidth
         >
-          Genera Codice
+          Genera Codice SAP Fiori
         </Button>
       </ButtonContainer>
     </FormContainer>
@@ -375,43 +423,106 @@ const FlowerForm = ({ onGenerate }) => {
 // Stili del componente
 const FormContainer = styled.div`
   padding: 15px;
+  max-width: 100%;
 `;
 
-const SelectionOptionItem = styled.div`
-  background: #f9f9f9;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  padding: 15px;
-  margin-bottom: 15px;
-`;
-
-const SortingOptionItem = styled(SelectionOptionItem)``;
-
-const OptionHeader = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-`;
-
-const TwoColumnsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+const FormHeader = styled.div`
+  margin-bottom: 20px;
   
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+  h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: #0066cc;
   }
 `;
 
-const OptionsFlex = styled.div`
+const FormHint = styled.div`
+  color: #666;
+  font-size: 12px;
+  margin-top: 3px;
+  font-style: italic;
+`;
+
+const SectionHeader = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: #f0f4f8;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background: #e6eff7;
+  }
+  
+  h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+  }
+`;
+
+const SectionContent = styled.div`
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 0 0 6px 6px;
+  padding: 15px;
+  margin-top: -10px;
+  margin-bottom: 15px;
+  border-top: none;
+  animation: fadeIn 0.3s ease;
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`;
+
+const ActionGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
-  margin-top: 10px;
+`;
+
+const ActionsContainer = styled.div`
+  margin-top: 15px;
+  padding: 10px;
+  background: #f0f4f8;
+  border-radius: 6px;
+  
+  > button {
+    margin-top: 10px;
+  }
+`;
+
+const ActionItem = styled.div`
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 10px;
+`;
+
+const ActionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #eee;
+`;
+
+const ActionTitle = styled.div`
+  font-weight: bold;
+  color: #444;
 `;
 
 const ButtonContainer = styled.div`
   margin-top: 20px;
 `;
 
-export default FlowerForm;
+export default FioriForm;

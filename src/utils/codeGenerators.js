@@ -7,68 +7,176 @@ import selectionScreenUtils from './selectionScreenGenerator';
 
 // Collezione di funzioni per generare codice ABAP
 // Ogni funzione accetta un oggetto con i dati del form e restituisce una stringa di codice
-export const generateFlowerTable = (formData) => {
-  const { tableName, structure, fields, additionalDetails } = formData;
-  
-  let code = `* Definizione Struttura per Tabella Fiori
-TYPES: BEGIN OF ${structure},`;
-  
-  // Aggiungi campi principali
-  fields.forEach((field, index) => {
-    let fieldLine = `  ${field.name} TYPE ${field.type}`;
-    
-    if (field.length) {
-      fieldLine += `(${field.length})`;
-    }
-    
-    if (field.primaryKey) {
-      fieldLine += ` KEY`;
-    }
-    
-    if (field.required) {
-      fieldLine += ` NOT NULL`;
-    }
-    
-    code += `\n${fieldLine}${index < fields.length - 1 ? ',' : ''}`;
-  });
-  
-  // Aggiungi dettagli aggiuntivi
-  if (additionalDetails && additionalDetails.length > 0) {
-    code += ',';
-    additionalDetails.forEach((detail, index) => {
-      code += `\n  ${detail.fieldName} TYPE ${detail.type}(${detail.length})`;
-      
-      if (index < additionalDetails.length - 1) {
-        code += ',';
-      }
-    });
-  }
-  
-  code += `\nEND OF ${structure}.
+// Funzione per generare il report fiori
+export const generateFioriApp = (formData) => {
+  const {
+    appType = "transactional",
+    appTitle = "My Fiori App",
+    appDescription = "SAP Fiori Application",
+    appId = "z.myfioriapp",
+    oDataService = "ZMY_ODATA_SERVICE",
+    entitySet = "MyEntitySet",
+    navigationProperty = "",
+    includeAnnotations = true,
+    includeAnalytics = false,
+    includeCustomActions = false,
+    customActions = [],
+    includeDraftHandling = false,
+    includeFlexibleColumnLayout = false,
+    useSmartControls = true,
+    addAuthentication = true,
+    i18nSupport = true,
+    supportedLanguages = ["EN", "DE"],
+  } = formData;
 
-* Definizione Tabella Database
-TABLES: ${tableName}.
+  // Creazione base del manifest.json come oggetto JS
+  const manifest = {
+    _version: "1.32.0",
+    "sap.app": {
+      id: appId,
+      type: "application",
+      i18n: "i18n/i18n.properties",
+      title: "{{appTitle}}",
+      description: "{{appDescription}}",
+      applicationVersion: {
+        version: "1.0.0",
+      },
+      dataSources: {
+        mainService: {
+          uri: `/sap/opu/odata/sap/${oDataService}/`,
+          type: "OData",
+          settings: {
+            odataVersion: "2.0",
+            ...(includeAnnotations && { annotations: [`${appId}.annotations`] }),
+          },
+        },
+        ...(includeAnnotations && {
+          [`${appId}.annotations`]: {
+            uri: "annotations/annotations.xml",
+            type: "ODataAnnotation",
+            settings: {
+              localUri: "annotations/annotations.xml",
+            },
+          },
+        }),
+      },
+    },
+    "sap.ui": {
+      technology: "UI5",
+      icons: {
+        icon: "sap-icon://task",
+        favIcon: "",
+        phone: "",
+        "phone@2": "",
+        tablet: "",
+        "tablet@2": "",
+      },
+      deviceTypes: {
+        desktop: true,
+        tablet: true,
+        phone: true,
+      },
+      supportedThemes: ["sap_horizon", "sap_fiori_3", "sap_fiori_3_dark"],
+    },
+    "sap.ui5": {
+      rootView: {
+        viewName: `${appId}.view.App`,
+        type: "XML",
+        id: "app",
+      },
+      dependencies: {
+        minUI5Version: "1.96.0",
+        libs: {
+          "sap.ui.core": {},
+          "sap.m": {},
+          ...(useSmartControls && {
+            "sap.ui.comp": {},
+            "sap.ui.generic.app": {},
+          }),
+          ...(includeFlexibleColumnLayout && { "sap.f": {} }),
+          "sap.suite.ui.generic.template": {},
+          "sap.ui.layout": {},
+        },
+      },
+      contentDensities: {
+        compact: true,
+        cozy: true,
+      },
+      models: {
+        i18n: {
+          type: "sap.ui.model.resource.ResourceModel",
+          settings: {
+            bundleName: `${appId}.i18n.i18n`,
+          },
+        },
+        "": {
+          dataSource: "mainService",
+          preload: true,
+          settings: {},
+        },
+      },
+      routing: {
+        config: {
+          routerClass: includeFlexibleColumnLayout
+            ? "sap.f.routing.Router"
+            : "sap.m.routing.Router",
+          viewType: "XML",
+          viewPath: `${appId}.view`,
+          controlId: includeFlexibleColumnLayout ? "flexibleColumnLayout" : "app",
+          controlAggregation: includeFlexibleColumnLayout
+            ? "beginColumnPages"
+            : "pages",
+          bypassed: {
+            target: "notFound",
+          },
+          async: true,
+        },
+        routes: [
+          {
+            pattern: "",
+            name: "main",
+            target: "main",
+          },
+          ...(navigationProperty
+            ? [
+                {
+                  pattern: "Detail/{objectId}",
+                  name: "detail",
+                  target: "detail",
+                },
+              ]
+            : []),
+        ],
+        targets: {
+          main: {
+            viewName: "Main",
+            viewId: "main",
+            viewLevel: 1,
+            title: "{i18n>mainViewTitle}",
+          },
+          ...(navigationProperty && {
+            detail: {
+              viewName: "Detail",
+              viewId: "detail",
+              viewLevel: 2,
+              title: "{i18n>detailViewTitle}",
+              ...(includeFlexibleColumnLayout && {
+                controlAggregation: "midColumnPages",
+              }),
+            },
+          }),
+          notFound: {
+            viewName: "NotFound",
+            viewId: "notFound",
+          },
+        },
+      },
+    },
+  };
 
-* Selezione dati
-START-OF-SELECTION.
-  SELECT * FROM ${tableName}
-    INTO TABLE @DATA(lt_flowers).
-
-  " Elabora i dati dei fiori
-  LOOP AT lt_flowers ASSIGNING FIELD-SYMBOL(<fs_flower>).
-    " Logica di elaborazione
-    WRITE: / <fs_flower>-name, <fs_flower>-color.
-  ENDLOOP.`;
-  
-  return code;
+  // Restituisce il JSON formattato come stringa
+  return JSON.stringify(manifest, null, 2);
 };
-
-// Aggiungi alla mappa dei generatori in codeGenerators.js
-const generators = {
-  // ... altri generatori
-  'flower-table': generateFlowerTable
-};
-
 
 
 // Gestione generica di un qualsiasi costrutto
@@ -1129,7 +1237,7 @@ export const generateInterface = (formData) => {
       'bapi-call': generateBapiCall,
       'advanced-alv': generateAdvancedAlv,
       'selection-screen': selectionScreenUtils.generateSelectionScreen,
-      'flower': generateFlowerTable
+      'flower': generateFioriApp
     };
     
     if (generators[type]) {
