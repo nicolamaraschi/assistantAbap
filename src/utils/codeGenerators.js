@@ -1,6 +1,6 @@
 // Importa tutti i moduli necessari all'inizio del file
 import { generateAdvancedAlv } from './advancedAlvGenerator';
-import { generateSelectionScreen } from './selectionScreenGenerator';
+
 
 // Altri import esistenti...
 
@@ -1066,7 +1066,7 @@ export const generateInterface = (formData) => {
       'alv-grid': generateAlvGrid,
       'bapi-call': generateBapiCall,
       'advanced-alv': generateAdvancedAlv,
-    'selection-screen': generateSelectionScreen   // Add this line to include the Selection Screen generator
+   'selection-screen': selectionScreenGenerator.generateSelectionScreen
     };
     
     if (generators[type]) {

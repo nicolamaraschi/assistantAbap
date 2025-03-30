@@ -61,6 +61,7 @@ export const generateAdvancedAlv = (formData) => {
     const {
       alvType,
       tableName,
+      structName,  // Aggiungi questa riga
       fieldCatalog,
       className,
       containerName,
@@ -131,7 +132,7 @@ export const generateAdvancedAlv = (formData) => {
       " Genera field catalog
       CALL FUNCTION 'LVC_FIELDCATALOG_MERGE'
         EXPORTING
-          i_structure_name = '${structName}'
+          i_structure_name = '${formData.structName}'
         CHANGING
           ct_fieldcat      = mt_fcat.
   
@@ -940,5 +941,3 @@ export const generateAdvancedAlv = (formData) => {
     return code;
   };
   
-  // Esporta la funzione principale
-  export { generateAdvancedAlv };
