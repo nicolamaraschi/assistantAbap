@@ -1,3 +1,10 @@
+// Importa tutti i moduli necessari all'inizio del file
+import { generateAdvancedAlv } from './advancedAlvGenerator';
+import { generateSelectionScreen } from './selectionScreenGenerator';
+
+// Altri import esistenti...
+
+
 // Collezione di funzioni per generare codice ABAP
 // Ogni funzione accetta un oggetto con i dati del form e restituisce una stringa di codice
 
@@ -1057,7 +1064,9 @@ export const generateInterface = (formData) => {
       'method-chain': generateMethodChain,
       'method-definition': generateMethodDefinition,
       'alv-grid': generateAlvGrid,
-      'bapi-call': generateBapiCall
+      'bapi-call': generateBapiCall,
+      'advanced-alv': generateAdvancedAlv,
+    'selection-screen': generateSelectionScreen   // Add this line to include the Selection Screen generator
     };
     
     if (generators[type]) {
